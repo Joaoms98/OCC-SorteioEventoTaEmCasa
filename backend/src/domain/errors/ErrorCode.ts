@@ -1,0 +1,45 @@
+export const ErrorCode = {
+  EventNotFound: 'EVENT_NOT_FOUND',
+  ParticipantNotFound: 'PARTICIPANT_NOT_FOUND',
+  PrizeNotFound: 'PRIZE_NOT_FOUND',
+  PrizeImageNotFound: 'PRIZE_IMAGE_NOT_FOUND',
+  DrawNotFound: 'DRAW_NOT_FOUND',
+  VerificationNotFound: 'VERIFICATION_NOT_FOUND',
+
+  ParticipantAlreadyRegistered: 'PARTICIPANT_ALREADY_REGISTERED',
+  ParticipantHasDraw: 'PARTICIPANT_HAS_DRAW',
+  PrizeHasDraws: 'PRIZE_HAS_DRAWS',
+  DrawConflict: 'DRAW_CONFLICT',
+
+  PrizeOutOfStock: 'PRIZE_OUT_OF_STOCK',
+  NoPrizesAvailable: 'NO_PRIZES_AVAILABLE',
+  PrizeQuantityBelowDrawn: 'PRIZE_QUANTITY_BELOW_DRAWN',
+  NoEligibleParticipants: 'NO_ELIGIBLE_PARTICIPANTS',
+  RegistrationClosed: 'REGISTRATION_CLOSED',
+  DrawAlreadyVoided: 'DRAW_ALREADY_VOIDED',
+  DrawInProgress: 'DRAW_IN_PROGRESS',
+  DrawNotRevealed: 'DRAW_NOT_REVEALED',
+  PrizeAlreadyClaimed: 'PRIZE_ALREADY_CLAIMED',
+  PhoneRequired: 'PHONE_REQUIRED',
+  EmailRequired: 'EMAIL_REQUIRED',
+  VerificationExpired: 'VERIFICATION_EXPIRED',
+  InvalidVerificationCode: 'INVALID_VERIFICATION_CODE',
+  TooManyVerificationAttempts: 'TOO_MANY_VERIFICATION_ATTEMPTS',
+  VerificationResendTooSoon: 'VERIFICATION_RESEND_TOO_SOON',
+  VerificationResendLimit: 'VERIFICATION_RESEND_LIMIT',
+  TooManyVerificationsForEmail: 'TOO_MANY_VERIFICATIONS_FOR_EMAIL',
+  EmailDeliveryFailed: 'EMAIL_DELIVERY_FAILED',
+
+  InvalidEventName: 'INVALID_EVENT_NAME',
+  InvalidParticipantName: 'INVALID_PARTICIPANT_NAME',
+  InvalidPrizeName: 'INVALID_PRIZE_NAME',
+  InvalidPrizeQuantity: 'INVALID_PRIZE_QUANTITY',
+  InvalidPhone: 'INVALID_PHONE',
+  InvalidEmail: 'INVALID_EMAIL',
+  InvalidImage: 'INVALID_IMAGE',
+  ImageTooLarge: 'IMAGE_TOO_LARGE',
+
+  InvalidCredentials: 'INVALID_CREDENTIALS',
+} as const;
+
+export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];

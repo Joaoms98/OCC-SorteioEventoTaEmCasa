@@ -1,0 +1,129 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/infrastructure/database/prisma/generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum DrawStatus {
+  CONFIRMED
+  VOIDED
+
+  @@map("draw_status")
+}
+
+/// What the live roulette spins: the prizes or the participants' names.
+enum DrawMode {
+  PRIZES
+  PARTICIPANTS
+
+  @@map("draw_mode")
+}
+
+model Event {
+  id               String    @id @db.Uuid
+  name             String    @db.VarChar(120)
+  description      String?   @db.VarChar(500)
+  eventDate        DateTime? @map("event_date") @db.Timestamptz(3)
+  registrationOpen Boolean   @default(false) @map("registration_open")
+  drawMode         DrawMode  @default(PRIZES) @map("draw_mode")
+  createdAt        DateTime  @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @map("updated_at") @db.Timestamptz(3)
+
+  participants  Participant[]
+  prizes        Prize[]
+  draws         Draw[]
+  verifications RegistrationVerification[]
+
+  @@map("events")
+}
+
+model Participant {
+  id        String   @id @db.Uuid
+  eventId   String   @map("event_id") @db.Uuid
+  name      String   @db.VarChar(120)
+  phone     String?  @db.VarChar(20)
+  email     String?  @db.VarChar(160)
+  createdAt DateTime @map("created_at") @db.Timestamptz(3)
+
+  event Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  draws Draw[]
+
+  @@unique([eventId, phone])
+  @@unique([eventId, email])
+  @@index([eventId, createdAt])
+  @@map("participants")
+}
+
+model Prize {
+  id             String    @id @db.Uuid
+  eventId        String    @map("event_id") @db.Uuid
+  name           String    @db.VarChar(120)
+  description    String?   @db.VarChar(500)
+  quantity       Int
+  imageUpdatedAt DateTime? @map("image_updated_at") @db.Timestamptz(3)
+  createdAt      DateTime  @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @map("updated_at") @db.Timestamptz(3)
+
+  event Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  draws Draw[]
+  image PrizeImage?
+
+  @@index([eventId])
+  @@map("prizes")
+}
+
+/// Prize photos are stored in the database: free hosts (e.g. Render) wipe the local disk on restart.
+model PrizeImage {
+  prizeId     String @id @map("prize_id") @db.Uuid
+  contentType String @map("content_type") @db.VarChar(40)
+  data        Bytes
+  byteSize    Int    @map("byte_size")
+
+  prize Prize @relation(fields: [prizeId], references: [id], onDelete: Cascade)
+
+  @@map("prize_images")
+}
+
+model Draw {
+  id            String     @id @db.Uuid
+  eventId       String     @map("event_id") @db.Uuid
+  prizeId       String     @map("prize_id") @db.Uuid
+  participantId String     @map("participant_id") @db.Uuid
+  status        DrawStatus @default(CONFIRMED)
+  drawnAt       DateTime   @map("drawn_at") @db.Timestamptz(3)
+  voidedAt      DateTime?  @map("voided_at") @db.Timestamptz(3)
+  claimedAt     DateTime?  @map("claimed_at") @db.Timestamptz(3)
+
+  event       Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  prize       Prize       @relation(fields: [prizeId], references: [id], onDelete: NoAction)
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: NoAction)
+
+  @@unique([eventId, participantId])
+  @@index([prizeId, status])
+  @@map("draws")
+}
+
+/// Public registrations waiting for the e-mail code (the participant is created once confirmed).
+model RegistrationVerification {
+  id         String   @id @db.Uuid
+  eventId    String   @map("event_id") @db.Uuid
+  name       String   @db.VarChar(120)
+  phone      String   @db.VarChar(20)
+  email      String   @db.VarChar(160)
+  codeHash   String   @map("code_hash") @db.VarChar(128)
+  attempts   Int      @default(0)
+  sendCount  Int      @map("send_count")
+  lastSentAt DateTime @map("last_sent_at") @db.Timestamptz(3)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @map("created_at") @db.Timestamptz(3)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([email, createdAt])
+  @@index([expiresAt])
+  @@map("registration_verifications")
+}

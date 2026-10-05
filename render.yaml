@@ -1,0 +1,38 @@
+# Render Blueprint: one free web service serving both the API (/api) and the React build.
+# The database lives on Neon (free, does not expire) — see README.
+services:
+  - type: web
+    name: occ-sorteio
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      # Render's edge (Cloudflare) sends the visitor's real address here; rate limits are counted per visitor.
+      - key: CLIENT_IP_HEADER
+        value: cf-connecting-ip
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Registration codes are e-mailed through Brevo (free plan: 300 e-mails/day).
+      - key: EMAIL_PROVIDER
+        value: brevo
+      - key: BREVO_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_FROM_NAME
+        value: Sorteio OCC

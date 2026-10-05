@@ -1,0 +1,251 @@
+/*
+ * Prize roulette in pure CSS, modeled after assets/roulette-reference.jpg: dark brown rim, slices
+ * in cream / orange / dark brown / sage / mid brown, radial labels, arrow on top, metal stand.
+ * --wheel-size is set by the layout (.stage-arena-wheel).
+ */
+.wheel {
+  --wheel-rim: #301911;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--wheel-size);
+  text-shadow: none;
+}
+
+.wheel-rim {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  /* Explicit size instead of aspect-ratio: older iOS Safari turns the wheel into an oval. */
+  width: var(--wheel-size);
+  height: var(--wheel-size);
+  padding: calc(var(--wheel-size) * 0.035);
+  background: radial-gradient(circle, #3d2d1b 0%, var(--wheel-rim) 70%);
+  border: calc(var(--wheel-size) * 0.006) solid #4a3a26;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 6%),
+    0 22px 46px rgb(0 0 0 / 50%);
+  transition: box-shadow 0.4s ease;
+}
+
+.wheel-spinning .wheel-rim {
+  box-shadow:
+    inset 0 0 0 2px rgb(255 255 255 / 6%),
+    0 22px 46px rgb(0 0 0 / 50%),
+    0 0 46px rgb(232 97 31 / 55%);
+}
+
+.wheel-disc {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 30%);
+  will-change: transform;
+}
+
+.wheel-disc-empty {
+  background: repeating-conic-gradient(#dccdae 0deg 30deg, #503831 30deg 60deg);
+  opacity: 0.45;
+}
+
+/* Each label is a strip from the center to the rim, rotated to the middle of its slice. */
+.wheel-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50%;
+  height: calc(var(--wheel-size) * 0.12);
+  margin-top: calc(var(--wheel-size) * -0.06);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+.wheel-label-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35em;
+  padding: 0 7% 0 22%;
+  font-family: var(--font);
+  font-size: calc(var(--wheel-size) * 0.033);
+  font-weight: 800;
+  line-height: 1.05;
+  text-align: right;
+}
+
+/* Left half: turned around so the text reads upright, icon still next to the rim. */
+.wheel-label-flipped {
+  flex-direction: row-reverse;
+  padding: 0 22% 0 7%;
+  text-align: left;
+  transform: rotate(180deg);
+}
+
+.wheel-label-text {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.wheel-label-image,
+.wheel-label-icon {
+  flex-shrink: 0;
+  width: calc(var(--wheel-size) * 0.07);
+  height: calc(var(--wheel-size) * 0.07);
+}
+
+.wheel-label-image {
+  object-fit: cover;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.wheel-highlight {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: wheel-highlight-pulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes wheel-highlight-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.wheel-hub {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--wheel-size) * 0.089);
+  height: calc(var(--wheel-size) * 0.089);
+  background: radial-gradient(circle at 35% 30%, #6b4a33, #2f180e 70%);
+  border: calc(var(--wheel-size) * 0.006) solid #dccdae;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 55%);
+  translate: -50% -50%;
+}
+
+/* Arrow on top, pointing at the winning slice (outer element holds the outline/shadow). */
+.wheel-pointer {
+  position: absolute;
+  top: calc(var(--wheel-size) * -0.05);
+  left: 50%;
+  z-index: 3;
+  width: calc(var(--wheel-size) * 0.11);
+  height: calc(var(--wheel-size) * 0.15);
+  transform-origin: 50% 15%;
+  translate: -50% 0;
+  filter: drop-shadow(1.5px 0 0 #e9dcc0) drop-shadow(-1.5px 0 0 #e9dcc0) drop-shadow(0 -1.5px 0 #e9dcc0)
+    drop-shadow(0 2px 0 #e9dcc0) drop-shadow(0 8px 10px rgb(0 0 0 / 55%));
+}
+
+.wheel-pointer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #3d2216, #2f180e 55%, #24120a);
+  clip-path: polygon(30% 0, 70% 0, 70% 52%, 100% 52%, 50% 100%, 0 52%, 30% 52%);
+}
+
+.wheel-spinning .wheel-pointer {
+  animation: wheel-pointer-tick 0.14s ease-in-out infinite alternate;
+}
+
+@keyframes wheel-pointer-tick {
+  from {
+    rotate: -5deg;
+  }
+  to {
+    rotate: 5deg;
+  }
+}
+
+.wheel-stand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: calc(var(--wheel-size) * -0.03);
+}
+
+.wheel-stand-neck {
+  width: calc(var(--wheel-size) * 0.2);
+  height: calc(var(--wheel-size) * 0.09);
+  background: linear-gradient(90deg, #3e3b33 0%, #7d7563 45%, #555246 100%);
+  clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%);
+}
+
+.wheel-stand-base {
+  width: calc(var(--wheel-size) * 0.5);
+  height: calc(var(--wheel-size) * 0.04);
+  background: linear-gradient(180deg, #8a8270 0%, #5c584c 50%, #423d37 100%);
+  border-radius: 8px 8px 4px 4px;
+  box-shadow: 0 10px 18px rgb(0 0 0 / 45%);
+}
+
+/* ---------- Stage layout: wheel on the left, draw status on the right ---------- */
+
+/* .stage-main.stage-arena: global.css (.stage-main is a flex column) loads after this file. */
+.stage-main.stage-arena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1rem, 4vw, 4rem);
+}
+
+.stage-arena-wheel {
+  --wheel-size: min(38vw, 60vh, 560px);
+  display: flex;
+  justify-content: center;
+  padding-top: calc(var(--wheel-size) * 0.06);
+}
+
+.stage-arena-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.1rem;
+  min-width: 0;
+  text-align: center;
+}
+
+.stage-arena .stage-name {
+  font-size: clamp(2.2rem, 5vw, 5rem);
+}
+
+.stage-arena .stage-name-idle {
+  font-size: clamp(1.8rem, 3.6vw, 3.4rem);
+}
+
+.stage-arena .stage-name-prize {
+  font-size: clamp(1.8rem, 3.8vw, 3.6rem);
+  animation: pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+.stage-arena .stage-name-card {
+  font-size: clamp(2rem, 4vw, 4.2rem);
+}
+
+@media (max-width: 900px) {
+  .stage-main.stage-arena {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stage-arena-wheel {
+    --wheel-size: min(82vw, 420px);
+  }
+}

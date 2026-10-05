@@ -1,0 +1,313 @@
+/* Date & time picker in the OCC "sticker" style: cream card, brown outline, orange selection. */
+
+.datetime-trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 0.8rem;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  color: var(--color-link);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.datetime-trigger > span {
+  flex: 1;
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.datetime-trigger .datetime-placeholder {
+  color: var(--color-muted);
+  font-weight: 400;
+}
+
+.datetime-trigger:hover,
+.datetime-trigger-open {
+  border-color: var(--color-brown);
+}
+
+.datetime-trigger:focus-visible {
+  outline: 3px solid rgb(232 97 31 / 30%);
+  border-color: var(--color-brown);
+}
+
+.datetime-trigger[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.datetime-chevron {
+  color: var(--color-muted);
+  transition: transform 0.2s ease;
+}
+
+.datetime-trigger-open .datetime-chevron {
+  transform: rotate(180deg);
+}
+
+.datetime-panel {
+  margin-top: 0.4rem;
+  padding: 1rem;
+  background: var(--color-surface);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  transform-origin: top center;
+  animation: datetime-open 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes datetime-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.datetime-month {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+
+.datetime-month h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.datetime-nav,
+.datetime-step {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: var(--color-cream);
+  border: 2px solid var(--color-brown);
+  border-radius: 50%;
+  box-shadow: 2px 2px 0 var(--color-brown);
+  color: var(--color-brown);
+  cursor: pointer;
+  transition: transform 0.08s, box-shadow 0.08s;
+}
+
+.datetime-nav:active,
+.datetime-step:active {
+  box-shadow: 0 0 0 var(--color-brown);
+  transform: translate(2px, 2px);
+}
+
+.datetime-nav:focus-visible,
+.datetime-step:focus-visible,
+.datetime-day:focus-visible,
+.datetime-chip:focus-visible {
+  outline: 3px solid var(--color-ice);
+  outline-offset: 2px;
+}
+
+.datetime-weekdays,
+.datetime-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.datetime-weekdays abbr {
+  padding: 0.2rem 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.datetime-grid-next {
+  animation: datetime-slide-next 0.22s ease-out both;
+}
+
+.datetime-grid-prev {
+  animation: datetime-slide-prev 0.22s ease-out both;
+}
+
+@keyframes datetime-slide-next {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes datetime-slide-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.datetime-day {
+  aspect-ratio: 1;
+  min-height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.datetime-day:hover {
+  background: var(--color-cream);
+}
+
+.datetime-day-outside {
+  color: rgb(117 100 76 / 45%);
+  font-weight: 500;
+}
+
+.datetime-day-today {
+  border: 2px dashed var(--color-brand);
+}
+
+.datetime-day-selected,
+.datetime-day-selected:hover {
+  background: var(--color-brand-light);
+  border: 2px solid var(--color-brown);
+  box-shadow: 2px 2px 0 var(--color-brown);
+  color: var(--color-brown);
+  animation: datetime-pop 0.25s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes datetime-pop {
+  from {
+    transform: scale(0.75);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.datetime-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 2px dashed var(--color-border-soft);
+}
+
+.datetime-time-label {
+  align-self: flex-start;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.datetime-clock {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.datetime-stepper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.datetime-digits {
+  min-width: 3.2rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--color-cream);
+  border: 2px solid var(--color-brown);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.datetime-colon {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.datetime-quick {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.datetime-chip {
+  min-height: 36px;
+  padding: 0.25rem 0.8rem;
+  background: var(--color-surface);
+  border: 2px solid var(--color-border-soft);
+  border-radius: 999px;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.datetime-chip-active {
+  background: var(--color-brand-light);
+  border-color: var(--color-brown);
+  color: var(--color-brown);
+}
+
+.datetime-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.datetime-actions-end {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .datetime-panel {
+    padding: 0.8rem 0.6rem;
+  }
+
+  .datetime-actions,
+  .datetime-actions-end {
+    width: 100%;
+  }
+
+  .datetime-actions-end .btn {
+    flex: 1;
+  }
+}

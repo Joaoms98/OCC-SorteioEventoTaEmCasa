@@ -1,0 +1,16 @@
+# Local PostgreSQL for development: docker compose up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: occ_raffle
+    ports:
+      # Loopback only: the dev password is public, so the database must not be reachable from the Wi-Fi.
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:
