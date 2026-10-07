@@ -131,7 +131,7 @@ export function EventDetailPage() {
         ))}
       </nav>
 
-      {tab === 'participants' && <ParticipantsTab eventId={event.id} onChange={reload} />}
+      {tab === 'participants' && <ParticipantsTab eventId={event.id} selfService={event.drawMode === 'INTERACTIVE'} onChange={reload} />}
       {tab === 'prizes' && <PrizesTab eventId={event.id} onChange={reload} />}
       {tab === 'winners' && <WinnersTab eventId={event.id} eventName={event.name} onChange={reload} />}
 

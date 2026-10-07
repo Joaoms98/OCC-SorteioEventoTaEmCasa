@@ -136,7 +136,7 @@ export function LiveStage(props: LiveStageProps) {
                   {current?.phase === 'voided' && <p className="stage-prize-name">{current.prize.name}</p>}
 
                   <div className={`stage-name stage-name-${current?.phase ?? 'idle'}`} aria-live="polite">
-                    {!current && (allDrawn ? 'Todos os brindes foram sorteados!' : idleText)}
+                    {!current && (allDrawn ? (drawMode === 'INTERACTIVE' ? 'Todos os brindes já saíram!' : 'Todos os brindes foram sorteados!') : idleText)}
                     {current?.phase === 'drawing' && (
                       <RollingName names={snapshot?.rollNames ?? []} revealAt={current.revealAt} />
                     )}
@@ -159,8 +159,9 @@ export function LiveStage(props: LiveStageProps) {
 
           {snapshot && (
             <p className="stage-hint">
-              {snapshot.stats.eligibleParticipants.toLocaleString('pt-BR')}{' '}
-              {snapshot.stats.eligibleParticipants === 1 ? 'participante concorrendo' : 'participantes concorrendo'}
+              {drawMode === 'INTERACTIVE'
+                ? `${snapshot.stats.participants.toLocaleString('pt-BR')} ${snapshot.stats.participants === 1 ? 'pessoa já girou' : 'pessoas já giraram'} a roleta`
+                : `${snapshot.stats.eligibleParticipants.toLocaleString('pt-BR')} ${snapshot.stats.eligibleParticipants === 1 ? 'participante concorrendo' : 'participantes concorrendo'}`}
             </p>
           )}
           {aside}

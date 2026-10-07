@@ -32,6 +32,7 @@ import { RemovePrizeImage } from '../application/use-cases/prizes/RemovePrizeIma
 import { SetPrizeImage } from '../application/use-cases/prizes/SetPrizeImage.ts';
 import { UpdatePrize } from '../application/use-cases/prizes/UpdatePrize.ts';
 import { ConfirmRegistration } from '../application/use-cases/registration/ConfirmRegistration.ts';
+import { InteractiveRoulette } from '../application/use-cases/registration/InteractiveRoulette.ts';
 import { ResendRegistrationCode } from '../application/use-cases/registration/ResendRegistrationCode.ts';
 import { StartRegistration } from '../application/use-cases/registration/StartRegistration.ts';
 import type { DrawRepository } from '../domain/repositories/DrawRepository.ts';
@@ -63,6 +64,7 @@ export interface UseCaseDependencies {
 /** Wires every use case to its ports. Shared by the server and the HTTP integration tests. */
 export function makeUseCases(deps: UseCaseDependencies): HttpUseCases {
   const { events, participants, prizes, draws, transaction, ids, clock, random, live } = deps;
+  const interactive = new InteractiveRoulette(prizes, draws, random, ids);
 
   return {
     authenticateAdmin: new AuthenticateAdmin(deps.passwordVerifier, deps.tokens),
@@ -72,7 +74,7 @@ export function makeUseCases(deps: UseCaseDependencies): HttpUseCases {
     getEventOverview: new GetEventOverview(events, participants, prizes, draws),
     getPublicEvent: new GetPublicEvent(events),
     listActiveEvents: new ListActiveEvents(events),
-    updateEvent: new UpdateEvent(events, clock),
+    updateEvent: new UpdateEvent(events, participants, clock),
     deleteEvent: new DeleteEvent(events),
 
     addParticipant: new AddParticipant(events, participants, ids, clock),
@@ -96,10 +98,10 @@ export function makeUseCases(deps: UseCaseDependencies): HttpUseCases {
     getLiveBoard: new GetLiveBoard(events, participants, prizes, draws, live, random),
 
     startRegistration: new StartRegistration(
-      events, participants, deps.verifications, deps.codeHasher, deps.emailSender, random, ids, clock,
+      events, participants, deps.verifications, deps.codeHasher, deps.emailSender, random, ids, clock, interactive,
     ),
     confirmRegistration: new ConfirmRegistration(
-      transaction, events, participants, deps.verifications, deps.codeHasher, ids, clock,
+      transaction, events, participants, deps.verifications, deps.codeHasher, ids, clock, interactive,
     ),
     resendRegistrationCode: new ResendRegistrationCode(
       events, deps.verifications, deps.codeHasher, deps.emailSender, random, clock,

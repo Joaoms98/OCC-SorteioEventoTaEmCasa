@@ -50,6 +50,7 @@ export function createApiRouter(
 
   router.get('/public/events', publicEvents.list);
   router.get('/public/events/:eventId', publicEvents.show);
+  router.get('/public/events/:eventId/prizes', publicEvents.prizes);
   const registrationLimiter = createRegistrationRateLimiter(rateLimits);
   router.post('/public/events/:eventId/registrations', registrationLimiter, publicEvents.startRegistration);
   router.post(

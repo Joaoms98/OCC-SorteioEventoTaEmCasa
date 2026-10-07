@@ -38,8 +38,10 @@ function OrganizerStage({ eventId }: { eventId: string }) {
   const inFlight = useRef(false);
 
   const drawing = current?.phase === 'drawing';
+  // Interactive roulette: each participant spins on their own phone; the stage only invites and shows winners.
+  const interactive = snapshot?.event.drawMode === 'INTERACTIVE';
   const blocker = drawBlocker(live);
-  const canDraw = !submitting && !drawing && blocker === null;
+  const canDraw = !interactive && !submitting && !drawing && blocker === null;
   // A participant roulette plays for one prize at a time: the organizer's pick, or the first one left.
   const availablePrizes = (snapshot?.prizes ?? []).filter((prize) => prize.remainingUnits > 0);
   const prizeAtStake =
@@ -119,7 +121,7 @@ function OrganizerStage({ eventId }: { eventId: string }) {
       <LiveStage
         live={live}
         audience="organizer"
-        idleText="Quem será?"
+        idleText={interactive ? 'Escaneie e gire a roleta!' : 'Quem será?'}
         message={message}
         highlightPrizeId={prizeAtStakeId}
         headerStart={
@@ -143,7 +145,13 @@ function OrganizerStage({ eventId }: { eventId: string }) {
           </>
         }
         controls={
-          current?.phase === 'revealed' || current?.phase === 'claimed' ? (
+          interactive ? (
+            <SelfServiceInvite
+              eventId={eventId}
+              registrationOpen={snapshot?.event.registrationOpen ?? false}
+              prizesLeft={availablePrizes.length > 0}
+            />
+          ) : current?.phase === 'revealed' || current?.phase === 'claimed' ? (
             <>
               {prizeAtStake && (
                 <PrizePicker prizes={availablePrizes} selectedId={prizeAtStake.id} onSelect={setChosenPrizeId} disabled={!canDraw} />
@@ -241,6 +249,40 @@ function PrizePicker({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Interactive roulette: the projector shows how to take part instead of a draw button. */
+function SelfServiceInvite({
+  eventId,
+  registrationOpen,
+  prizesLeft,
+}: {
+  eventId: string;
+  registrationOpen: boolean;
+  prizesLeft: boolean;
+}) {
+  // Without prizes nobody can register any more: the stage already says they are all gone.
+  if (!prizesLeft) {
+    return (
+      <p className="stage-hint stage-hint-warning">
+        Para continuar, <Link to={`${adminPaths.event(eventId)}?tab=prizes`}>cadastre mais brindes</Link>.
+      </p>
+    );
+  }
+  if (!registrationOpen) {
+    return (
+      <p className="stage-hint stage-hint-warning">
+        As inscrições estão fechadas. <Link to={adminPaths.event(eventId)}>Abra as inscrições</Link> para o público girar a roleta.
+      </p>
+    );
+  }
+  const registerUrl = `${window.location.origin}${publicPaths.register(eventId)}`;
+  return (
+    <div className="stage-invite">
+      <QRCodeSVG className="qr-code" value={registerUrl} size={220} marginSize={2} title="QR Code para se inscrever e girar a roleta" />
+      <p className="stage-hint">Aponte a câmera, inscreva-se e gire a roleta no seu celular.</p>
     </div>
   );
 }

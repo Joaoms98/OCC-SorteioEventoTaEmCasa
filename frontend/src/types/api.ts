@@ -1,5 +1,9 @@
-/** What the live roulette spins: the prizes (the prize is drawn) or the participants' names. */
-export type DrawMode = 'PRIZES' | 'PARTICIPANTS';
+/**
+ * How the raffle works: the organizer spins a live roulette of prizes (the prize is drawn too) or
+ * of participants' names; or, on the interactive roulette, whoever registers spins a prize
+ * roulette on their own phone and wins something.
+ */
+export type DrawMode = 'PRIZES' | 'PARTICIPANTS' | 'INTERACTIVE';
 
 export interface RaffleEvent {
   id: string;
@@ -28,6 +32,28 @@ export type PublicEvent = Pick<RaffleEvent, 'id' | 'name' | 'description' | 'eve
 /** Event listed on the public home page: open for registration or with prizes still to draw. */
 export interface ActiveEvent extends PublicEvent {
   remainingUnits: number;
+}
+
+/** A prize as anyone may see it: enough to draw the roulette. */
+export interface PublicPrize {
+  id: string;
+  name: string;
+  imageUrl: string | null;
+  remainingUnits: number;
+}
+
+/** Interactive roulette: the prize the server drew and the wheel the participant spins. */
+export interface InteractiveSpin {
+  drawId: string;
+  prize: Pick<PublicPrize, 'id' | 'name' | 'imageUrl'>;
+  /** Prizes and units before this spin (the won prize is among them). */
+  wheel: PublicPrize[];
+}
+
+export interface RegistrationResult {
+  id: string;
+  name: string;
+  spin: InteractiveSpin | null;
 }
 
 export interface EventInput {

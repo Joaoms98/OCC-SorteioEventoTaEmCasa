@@ -615,6 +615,10 @@ textarea {
   line-height: 1.35;
 }
 
+.choice-card:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .choice-card-active {
   border-color: var(--color-brown);
   box-shadow: 3px 3px 0 var(--color-brand);
@@ -962,6 +966,61 @@ tbody tr:last-child td {
   align-self: center;
 }
 
+/* Interactive roulette: the prizes on the wheel, shown before the registration form. */
+.prize-pitch {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+  background: var(--color-surface-alt);
+  border: 2px dashed var(--color-brand);
+  border-radius: var(--radius-sm);
+}
+
+.prize-pitch p {
+  margin: 0;
+}
+
+.public-prizes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.public-prizes li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.2rem 0.65rem 0.2rem 0.3rem;
+  overflow-wrap: anywhere;
+  background: var(--color-surface);
+  border: 2px solid var(--color-brown);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.public-prizes img,
+.public-prizes svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+}
+
+.public-prizes img {
+  object-fit: cover;
+}
+
+.public-prizes svg {
+  padding: 3px;
+  color: var(--color-brand);
+}
+
 /* ---------- Public home page: active raffles over the brand pattern ---------- */
 
 .home {
@@ -1180,7 +1239,16 @@ tbody tr:last-child td {
 
 .parallax-bg {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /*
+   * The tallest the screen ever gets, not "the visible area": on phones the browser bar hides and
+   * comes back while scrolling, and a background that follows it is resized over and over (the
+   * pattern jumps and a dark strip flashes at the bottom).
+   */
+  height: 100vh;
+  height: 100lvh;
   z-index: -1;
   overflow: hidden;
   background: radial-gradient(
@@ -1203,6 +1271,26 @@ tbody tr:last-child td {
   background-repeat: repeat;
   background-size: clamp(340px, 36vw, 560px);
   will-change: transform;
+}
+
+/*
+ * Touch screens: no pointer to follow, and moving the background from the scroll position lags
+ * behind the finger (scrolling does not wait for scripts), which looks like flickering. A slow
+ * drift animated by the browser itself keeps the background alive instead.
+ */
+@media (hover: none), (pointer: coarse) {
+  .parallax-bg-layer {
+    animation: parallax-drift 45s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes parallax-drift {
+  from {
+    transform: translate3d(-22px, -8px, 0);
+  }
+  to {
+    transform: translate3d(22px, -52px, 0);
+  }
 }
 
 /* Keeps names and buttons readable over the colorful pattern, with the brand glow in the middle. */
@@ -1411,6 +1499,23 @@ button.prize-chip:disabled {
   border: 4px solid var(--stage-text);
   border-radius: 1.25rem;
   box-shadow: 0 0 0 4px var(--color-brand), 0 16px 34px rgb(0 0 0 / 45%);
+}
+
+/* Interactive roulette on the projector: QR code that takes people to the registration. */
+.stage-invite {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+
+.stage-invite .qr-code {
+  width: clamp(150px, 22vw, 220px);
+  height: clamp(150px, 22vw, 220px);
+  padding: 0.5rem;
+  background: #fff;
+  border: 3px solid var(--color-brown);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--color-brand);
 }
 
 /* Participant roulette: the organizer picks the prize of the next spin. */

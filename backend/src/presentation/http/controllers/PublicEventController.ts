@@ -1,10 +1,17 @@
 import type { RequestHandler } from 'express';
 import type { GetPublicEvent } from '../../../application/use-cases/events/GetPublicEvent.ts';
 import type { ListActiveEvents } from '../../../application/use-cases/events/ListActiveEvents.ts';
+import type { ListPrizes } from '../../../application/use-cases/prizes/ListPrizes.ts';
 import type { ConfirmRegistration } from '../../../application/use-cases/registration/ConfirmRegistration.ts';
 import type { ResendRegistrationCode } from '../../../application/use-cases/registration/ResendRegistrationCode.ts';
 import type { StartRegistration } from '../../../application/use-cases/registration/StartRegistration.ts';
-import { presentActiveEvent, presentPublicEvent, presentRegistrationVerification } from '../presenters/presenters.ts';
+import {
+  presentActiveEvent,
+  presentPublicEvent,
+  presentPublicPrize,
+  presentRegistrationResult,
+  presentRegistrationVerification,
+} from '../presenters/presenters.ts';
 import { parseInput, parseParams } from '../validation/parse.ts';
 import {
   confirmRegistrationSchema,
@@ -16,6 +23,7 @@ import {
 export interface PublicEventUseCases {
   getPublicEvent: GetPublicEvent;
   listActiveEvents: ListActiveEvents;
+  listPrizes: ListPrizes;
   startRegistration: StartRegistration;
   confirmRegistration: ConfirmRegistration;
   resendRegistrationCode: ResendRegistrationCode;
@@ -36,6 +44,13 @@ export class PublicEventController {
     res.json(presentPublicEvent(event));
   };
 
+  /** Prizes of the event as the roulette shows them (name, photo, units left). */
+  prizes: RequestHandler = async (req, res) => {
+    const { eventId } = parseParams(eventParamsSchema, req.params);
+    const prizes = await this.useCases.listPrizes.execute({ eventId });
+    res.json(prizes.map(presentPublicPrize));
+  };
+
   /** Step 1: validates the data and e-mails a code; nobody is registered yet. */
   startRegistration: RequestHandler = async (req, res) => {
     const { eventId } = parseParams(eventParamsSchema, req.params);
@@ -48,9 +63,8 @@ export class PublicEventController {
   confirmRegistration: RequestHandler = async (req, res) => {
     const params = parseParams(verificationParamsSchema, req.params);
     const { code } = parseInput(confirmRegistrationSchema, req.body);
-    const participant = await this.useCases.confirmRegistration.execute({ ...params, code });
-    // Contact data is not echoed back on the public endpoint.
-    res.status(201).json({ id: participant.id, name: participant.name });
+    const result = await this.useCases.confirmRegistration.execute({ ...params, code });
+    res.status(201).json(presentRegistrationResult(result));
   };
 
   resendCode: RequestHandler = async (req, res) => {

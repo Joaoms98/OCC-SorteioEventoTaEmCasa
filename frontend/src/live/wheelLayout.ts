@@ -30,49 +30,24 @@ export interface WheelSegment {
   color: WheelColor;
 }
 
-const MAX_SEGMENTS = 16;
-
 /**
- * One slice per remaining unit while they fit; otherwise each prize keeps its share of the wheel
- * split into a few slices. Slices of the same prize are interleaved, like a classic prize wheel,
- * and the angle each prize covers is always proportional to its remaining units (its real odds).
+ * One slice per prize that still has units, all the same size, in the order the prizes were
+ * registered. The stock is not drawn on the wheel: a prize with 4 units appears once, exactly
+ * like a prize with 1. (How likely each prize is remains the server's business.)
  */
 export function buildWheel(prizes: WheelPrize[]): WheelSegment[] {
   const available = prizes.filter((prize) => prize.remainingUnits > 0);
-  const totalUnits = available.reduce((sum, prize) => sum + prize.remainingUnits, 0);
-  if (totalUnits === 0) return [];
-
-  const slicesPerPrize =
-    totalUnits <= MAX_SEGMENTS
-      ? available.map((prize) => prize.remainingUnits)
-      : available.map((prize) => Math.max(1, Math.round((MAX_SEGMENTS * prize.remainingUnits) / totalUnits)));
-  const totalSlices = slicesPerPrize.reduce((sum, count) => sum + count, 0);
-
-  // Deal slices round-robin so repeated prizes spread around the wheel.
-  const order: number[] = [];
-  for (let round = 0; order.length < totalSlices; round += 1) {
-    slicesPerPrize.forEach((count, index) => {
-      if (count > round) order.push(index);
-    });
-  }
-
-  let angle = 0;
-  return order.map((prizeIndex, position) => {
-    const prize = available[prizeIndex]!;
-    const span = ((prize.remainingUnits / totalUnits) * 360) / slicesPerPrize[prizeIndex]!;
-    const segment: WheelSegment = {
-      key: `${prize.id}:${position}`,
-      targetId: prize.id,
-      label: prize.name,
-      imageUrl: prize.imageUrl,
-      kind: 'prize',
-      start: angle,
-      end: angle + span,
-      color: colorAt(position, totalSlices),
-    };
-    angle += span;
-    return segment;
-  });
+  const span = 360 / Math.max(available.length, 1);
+  return available.map((prize, position) => ({
+    key: prize.id,
+    targetId: prize.id,
+    label: prize.name,
+    imageUrl: prize.imageUrl,
+    kind: 'prize',
+    start: position * span,
+    end: (position + 1) * span,
+    color: colorAt(position, available.length),
+  }));
 }
 
 export const nameSlotId = (slot: number): string => `slot:${slot}`;
@@ -134,11 +109,13 @@ export function rotationToLand(angle: number, from: number, turns: number): numb
 }
 
 /**
- * Braking of a free-spinning wheel: angle(t) = from + v0·t + a·t² + b·t³ (t in seconds), which
- * starts at the current speed, stops after `duration` and leaves `angle` under the pointer.
+ * Braking of a free-spinning wheel: it travels |v0|·t + a·t² + b·t³ degrees (t in seconds) in the
+ * direction it was already turning, which starts at the current speed, stops after `duration`
+ * and leaves `angle` under the pointer.
  */
 export interface LandingCurve {
   from: number;
+  /** Degrees per second; negative when the wheel turns counterclockwise. */
   v0: number;
   a: number;
   b: number;
@@ -146,23 +123,27 @@ export interface LandingCurve {
 }
 
 export function landingCurve(from: number, v0: number, angle: number, duration: number): LandingCurve {
-  const delta = (((-angle - from) % 360) + 360) % 360;
+  const direction = v0 < 0 ? -1 : 1;
+  const speed = Math.abs(v0);
+  // Distance still to travel, in the turning direction, until `angle` is under the pointer.
+  const delta = (((direction * (-angle - from)) % 360) + 360) % 360;
   // Braking evenly from v0 covers v0·T/2. Any distance from v0·T/3 up to that never speeds the
   // wheel up nor turns it backwards: take the first stop past v0·T/3 (always fits when v0·T ≥ 2160°).
-  const minimum = (v0 * duration) / 3;
+  const minimum = (speed * duration) / 3;
   const distance = delta + Math.max(Math.ceil((minimum - delta) / 360), 0) * 360;
   return {
     from,
     v0,
-    a: ((3 * distance) / duration - 2 * v0) / duration,
-    b: (v0 * duration - 2 * distance) / duration ** 3,
+    a: ((3 * distance) / duration - 2 * speed) / duration,
+    b: (speed * duration - 2 * distance) / duration ** 3,
     duration,
   };
 }
 
 export function curveAngle(curve: LandingCurve, seconds: number): number {
   const t = Math.min(Math.max(seconds, 0), curve.duration);
-  return curve.from + curve.v0 * t + curve.a * t * t + curve.b * t * t * t;
+  const direction = curve.v0 < 0 ? -1 : 1;
+  return curve.from + direction * (Math.abs(curve.v0) * t + curve.a * t * t + curve.b * t * t * t);
 }
 
 export const conicGradient = (segments: WheelSegment[]): string =>

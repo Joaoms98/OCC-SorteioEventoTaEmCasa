@@ -10,4 +10,6 @@ export const publicPaths = {
   home: '/',
   register: (eventId: string) => `/register/${eventId}`,
   live: (eventId: string) => `/live/${eventId}`,
+  /** Interactive roulette: where a registered participant spins and sees the prize. */
+  spin: (eventId: string) => `/spin/${eventId}`,
 };

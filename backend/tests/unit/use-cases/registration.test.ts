@@ -32,8 +32,9 @@ describe('Registration with e-mail code', () => {
     expect(verification.codeHash).not.toContain('000042');
     expect(ctx.db.participants.size).toBe(0);
 
-    const participant = await confirm(verification.id, '000042');
+    const { participant, spin } = await confirm(verification.id, '000042');
     expect(participant).toMatchObject({ name: 'Ana Lima', phone: '11987654321', email: 'ana@mail.com' });
+    expect(spin).toBeNull();
     expect(ctx.verifications.items.size).toBe(0);
   });
 
@@ -85,7 +86,7 @@ describe('Registration with e-mail code', () => {
     }
     clock.advance(VERIFICATION_RULES.resendCooldownMs);
     await expect(resend()).rejects.toMatchObject({ code: ErrorCode.VerificationResendLimit });
-    expect(await confirm(verification.id, codeFor())).toMatchObject({ name: 'Ana Lima' });
+    expect((await confirm(verification.id, codeFor())).participant).toMatchObject({ name: 'Ana Lima' });
   });
 
   it('limits how many registrations can be started for one e-mail per hour', async () => {

@@ -1,4 +1,4 @@
-import { CalendarDays, CircleCheck, Gift, Radio, Ticket } from 'lucide-react';
+import { CalendarDays, CircleCheck, Gift, Hand, Radio, Ticket } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { errorMessage } from '../api/ApiError';
@@ -7,7 +7,7 @@ import { Alert } from '../components/Alert';
 import { Spinner } from '../components/Spinner';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { ParallaxBackground } from '../live/ParallaxBackground';
-import { registeredNameFor } from '../registration/registrationStorage';
+import { readSpin, registeredNameFor } from '../registration/registrationStorage';
 import { publicPaths } from '../routes';
 import type { ActiveEvent } from '../types/api';
 import { formatDateTime, pluralize } from '../utils/format';
@@ -70,12 +70,16 @@ export function HomePage() {
 function ActiveEventCard({ event }: { event: ActiveEvent }) {
   // Registrations made on this phone: no need to offer the form again.
   const registeredName = registeredNameFor(event.id);
-  const canRegister = event.registrationOpen && !registeredName;
+  // Interactive roulette: registering is spinning, so it ends when the prizes do.
+  const interactive = event.drawMode === 'INTERACTIVE';
+  const spin = interactive && registeredName ? readSpin(event.id) : null;
+  const exhausted = interactive && event.remainingUnits === 0;
+  const canRegister = event.registrationOpen && !registeredName && !exhausted;
 
   return (
     <article className="card home-event">
-      <span className={`badge ${event.registrationOpen ? 'badge-success' : 'badge-muted'}`}>
-        {event.registrationOpen ? 'Inscrições abertas' : 'Inscrições encerradas'}
+      <span className={`badge ${event.registrationOpen && !exhausted ? 'badge-success' : 'badge-muted'}`}>
+        {exhausted ? 'Brindes esgotados' : event.registrationOpen ? 'Inscrições abertas' : 'Inscrições encerradas'}
       </span>
       <h2>{event.name}</h2>
 
@@ -84,7 +88,10 @@ function ActiveEventCard({ event }: { event: ActiveEvent }) {
       </p>
       {event.remainingUnits > 0 && (
         <p className="home-event-meta">
-          <Gift size={18} aria-hidden="true" /> {pluralize(event.remainingUnits, 'brinde para sortear', 'brindes para sortear')}
+          <Gift size={18} aria-hidden="true" />{' '}
+          {interactive
+            ? pluralize(event.remainingUnits, 'brinde na roleta', 'brindes na roleta')
+            : pluralize(event.remainingUnits, 'brinde para sortear', 'brindes para sortear')}
         </p>
       )}
       {event.description && <p className="home-event-description user-text">{event.description}</p>}
@@ -98,10 +105,16 @@ function ActiveEventCard({ event }: { event: ActiveEvent }) {
       <div className="home-event-actions">
         {canRegister && (
           <Link to={publicPaths.register(event.id)} className="btn btn-primary btn-block">
-            <Ticket size={18} aria-hidden="true" /> Quero participar
+            {interactive ? <Hand size={18} aria-hidden="true" /> : <Ticket size={18} aria-hidden="true" />}
+            {interactive ? 'Participar e girar a roleta' : 'Quero participar'}
           </Link>
         )}
-        <Link to={publicPaths.live(event.id)} className={`btn ${canRegister ? 'btn-secondary' : 'btn-primary'} btn-block`}>
+        {spin && (
+          <Link to={publicPaths.spin(event.id)} className="btn btn-primary btn-block">
+            <Gift size={18} aria-hidden="true" /> {spin.landed ? 'Ver meu brinde' : 'Girar a roleta'}
+          </Link>
+        )}
+        <Link to={publicPaths.live(event.id)} className={`btn ${canRegister || spin ? 'btn-secondary' : 'btn-primary'} btn-block`}>
           <Radio size={18} aria-hidden="true" /> Assistir ao vivo
         </Link>
       </div>

@@ -14,9 +14,13 @@ const IDLE_DRIFT = 0.35;
 const OVERSCAN_PX = 60;
 const SCROLL_OVERSCAN_PX = 220;
 
+/** Touch screens get a plain CSS drift instead (see .parallax-bg-layer in global.css). */
+const TOUCH_SCREEN = '(hover: none), (pointer: coarse)';
+
 /**
  * Full-screen background that reacts to the pointer and to the page scroll (parallax), and
  * drifts slowly on its own so the projector never looks frozen. Respects "reduce motion".
+ * On phones it only drifts: following the scroll from a script cannot keep up with the finger.
  */
 export function ParallaxBackground({ image, pointerShift = 30, scrollFactor = 0.25 }: ParallaxBackgroundProps) {
   const layerRef = useRef<HTMLDivElement>(null);
@@ -24,6 +28,7 @@ export function ParallaxBackground({ image, pointerShift = 30, scrollFactor = 0.
   useEffect(() => {
     const layer = layerRef.current;
     if (!layer || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia(TOUCH_SCREEN).matches) return;
 
     let target = { x: 0, y: 0 };
     let current = { x: 0, y: 0 };

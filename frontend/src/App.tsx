@@ -9,6 +9,7 @@ import { LivePage } from './pages/LivePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PublicRegistrationPage } from './pages/PublicRegistrationPage';
+import { SpinPage } from './pages/SpinPage';
 import { adminPaths } from './routes';
 
 export function App() {
@@ -17,6 +18,7 @@ export function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/register/:eventId" element={<PublicRegistrationPage />} />
       <Route path="/live/:eventId" element={<LivePage />} />
+      <Route path="/spin/:eventId" element={<SpinPage />} />
 
       {/* Organizer area: only reachable by typing /admin (the public pages do not link to it). */}
       <Route path="/admin/login" element={<LoginPage />} />

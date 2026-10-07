@@ -41,6 +41,7 @@ export class ImportParticipants {
 
   async execute(input: ImportParticipantsInput): Promise<ImportParticipantsOutput> {
     const event = await requireEvent(this.events, input.eventId);
+    event.ensureOrganizerRegisters();
     const now = this.clock.now();
     const rejected: RejectedEntry[] = [];
     const candidates: Array<{ line: number; participant: Participant }> = [];

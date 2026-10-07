@@ -2,10 +2,15 @@ import { BusinessRuleError } from '../errors/DomainError.ts';
 import { ErrorCode } from '../errors/ErrorCode.ts';
 import { normalizeName, normalizeOptionalText } from '../shared/text.ts';
 
-/** What the live roulette spins: the prizes (the prize is drawn) or the participants' names. */
+/**
+ * How the raffle works. The organizer spins a live roulette of prizes (the prize is drawn too) or
+ * of participants' names; or, on the interactive roulette, whoever registers spins a prize
+ * roulette on their own phone and always wins something while there is stock.
+ */
 export const DrawMode = {
   Prizes: 'PRIZES',
   Participants: 'PARTICIPANTS',
+  Interactive: 'INTERACTIVE',
 } as const;
 
 export type DrawMode = (typeof DrawMode)[keyof typeof DrawMode];
@@ -94,6 +99,21 @@ export class Event {
     if (changes.registrationOpen !== undefined) this.props.registrationOpen = changes.registrationOpen;
     if (changes.drawMode !== undefined) this.props.drawMode = changes.drawMode;
     this.props.updatedAt = now;
+  }
+
+  /** Interactive roulette: participants register themselves and spin their own wheel. */
+  get isInteractive(): boolean {
+    return this.props.drawMode === DrawMode.Interactive;
+  }
+
+  /** On the interactive roulette nobody is drawn by the organizer. */
+  ensureOrganizerDraws(): void {
+    if (this.isInteractive) throw new BusinessRuleError(ErrorCode.OrganizerDrawNotAllowed);
+  }
+
+  /** On the interactive roulette a registration is a spin, so it has to come from the person. */
+  ensureOrganizerRegisters(): void {
+    if (this.isInteractive) throw new BusinessRuleError(ErrorCode.ManualRegistrationNotAllowed);
   }
 
   ensureRegistrationOpen(): void {

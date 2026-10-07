@@ -16,7 +16,14 @@ import { parseParticipantList } from '../../utils/parseParticipantList';
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 
-export function ParticipantsTab({ eventId, onChange }: { eventId: string; onChange(): void }) {
+interface ParticipantsTabProps {
+  eventId: string;
+  /** Interactive roulette: people register themselves (and spin), so there is no manual registration. */
+  selfService: boolean;
+  onChange(): void;
+}
+
+export function ParticipantsTab({ eventId, selfService, onChange }: ParticipantsTabProps) {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -77,14 +84,18 @@ export function ParticipantsTab({ eventId, onChange }: { eventId: string; onChan
           onChange={(event) => setSearchInput(event.target.value)}
           aria-label="Buscar participantes"
         />
-        <div className="actions-left">
-          <button type="button" className="btn btn-secondary" onClick={() => setImporting(true)}>
-            Importar lista
-          </button>
-          <button type="button" className="btn btn-primary" onClick={() => setAdding(true)}>
-            + Participante
-          </button>
-        </div>
+        {selfService ? (
+          <p className="muted small">Na roleta interativa cada pessoa se inscreve pelo link do evento e gira a roleta.</p>
+        ) : (
+          <div className="actions-left">
+            <button type="button" className="btn btn-secondary" onClick={() => setImporting(true)}>
+              Importar lista
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => setAdding(true)}>
+              + Participante
+            </button>
+          </div>
+        )}
       </div>
 
       {feedback && <Alert tone="success">{feedback}</Alert>}

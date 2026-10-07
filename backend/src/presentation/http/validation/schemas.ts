@@ -53,7 +53,7 @@ const eventFields = {
     .nullable()
     .optional(),
   registrationOpen: z.boolean({ error: 'Valor inválido para inscrições abertas.' }).optional(),
-  drawMode: z.enum(['PRIZES', 'PARTICIPANTS'], { error: 'Escolha o tipo de roleta.' }).optional(),
+  drawMode: z.enum(['PRIZES', 'PARTICIPANTS', 'INTERACTIVE'], { error: 'Escolha o tipo de roleta.' }).optional(),
 };
 
 export const createEventSchema = z.object({ name: name('do evento'), ...eventFields });

@@ -24,6 +24,7 @@ export class AddParticipant {
 
   async execute(input: AddParticipantInput): Promise<Participant> {
     const event = await requireEvent(this.events, input.eventId);
+    event.ensureOrganizerRegisters();
     const participant = Participant.create({ ...input, eventId: event.id, id: this.ids.generate(), now: this.clock.now() });
     await ensureContactsAvailable(this.participants, participant);
     await this.participants.create(participant);

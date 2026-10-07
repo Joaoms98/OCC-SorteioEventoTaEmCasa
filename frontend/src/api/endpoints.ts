@@ -11,7 +11,9 @@ import type {
   Prize,
   PrizeInput,
   PublicEvent,
+  PublicPrize,
   RaffleEvent,
+  RegistrationResult,
   RegistrationVerification,
 } from '../types/api';
 import { apiUrl, request } from './httpClient';
@@ -74,6 +76,8 @@ export const publicApi = {
   /** Home page: events open for registration or with prizes still to draw. */
   listActiveEvents: () => request<ActiveEvent[]>('/public/events', { authenticated: false }),
   getEvent: (eventId: string) => request<PublicEvent>(`/public/events/${eventId}`, { authenticated: false }),
+  /** Prizes of the event as the roulette shows them. */
+  listPrizes: (eventId: string) => request<PublicPrize[]>(`/public/events/${eventId}/prizes`, { authenticated: false }),
   /** Step 1: sends the code by e-mail (nobody is registered yet). */
   startRegistration: (eventId: string, input: Required<ParticipantInput>) =>
     request<RegistrationVerification>(`/public/events/${eventId}/registrations`, {
@@ -83,7 +87,7 @@ export const publicApi = {
     }),
   /** Step 2: the right code creates the participant. */
   confirmRegistration: (eventId: string, verificationId: string, code: string) =>
-    request<{ id: string; name: string }>(`/public/events/${eventId}/registrations/${verificationId}/confirm`, {
+    request<RegistrationResult>(`/public/events/${eventId}/registrations/${verificationId}/confirm`, {
       method: 'POST',
       body: { code },
       authenticated: false,

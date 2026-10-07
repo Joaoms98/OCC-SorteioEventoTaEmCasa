@@ -15,10 +15,12 @@ enum DrawStatus {
   @@map("draw_status")
 }
 
-/// What the live roulette spins: the prizes or the participants' names.
+/// How the raffle works: live roulette of prizes or of participants' names (spun by the organizer),
+/// or the interactive roulette each participant spins after registering.
 enum DrawMode {
   PRIZES
   PARTICIPANTS
+  INTERACTIVE
 
   @@map("draw_mode")
 }

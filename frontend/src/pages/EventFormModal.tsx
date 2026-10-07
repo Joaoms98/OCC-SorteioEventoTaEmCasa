@@ -1,4 +1,4 @@
-import { Gift, Users } from 'lucide-react';
+import { Gift, Hand, Users } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { ApiError, errorMessage } from '../api/ApiError';
 import { Alert } from '../components/Alert';
@@ -19,6 +19,12 @@ const DRAW_MODES = [
     title: 'Roleta de participantes',
     description: 'Você escolhe o brinde e a roleta gira com os nomes. Ideal para um brinde só.',
     Icon: Users,
+  },
+  {
+    value: 'INTERACTIVE',
+    title: 'Roleta interativa',
+    description: 'Cada pessoa se inscreve e gira a roleta no próprio celular. Todo inscrito ganha um brinde, enquanto houver.',
+    Icon: Hand,
   },
 ] as const;
 

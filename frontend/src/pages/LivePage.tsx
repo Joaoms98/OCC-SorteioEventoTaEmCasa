@@ -17,16 +17,20 @@ export function LivePage() {
 function LiveAudience({ eventId }: { eventId: string }) {
   const live = useLiveDraw(eventId);
   const registrationOpen = live.snapshot?.event.registrationOpen ?? false;
+  // Interactive roulette: nobody waits for a draw; whoever registers spins on their own phone.
+  const interactive = live.snapshot?.event.drawMode === 'INTERACTIVE';
+  const prizesLeft = live.snapshot?.prizes.some((prize) => prize.remainingUnits > 0) ?? false;
+  const canJoin = registrationOpen && (!interactive || prizesLeft);
 
   return (
     <LiveStage
       live={live}
       audience="public"
-      idleText="Aguardando o próximo sorteio…"
+      idleText={interactive ? 'Inscreva-se e gire a roleta!' : 'Aguardando o próximo sorteio…'}
       aside={
-        registrationOpen ? (
+        canJoin ? (
           <Link to={publicPaths.register(eventId)} className="btn btn-stage-secondary">
-            Ainda não se inscreveu? Participe!
+            {interactive ? 'Participar e girar a roleta' : 'Ainda não se inscreveu? Participe!'}
           </Link>
         ) : null
       }

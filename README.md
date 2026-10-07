@@ -13,9 +13,10 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 - Cadastro de eventos, brindes (com quantidade e foto) e participantes
 - Importação de participantes colando uma lista ou colunas de planilha (`Nome; telefone; e-mail`)
 - **Inscrição pública pelo celular** via link/QR Code, com abertura/fechamento das inscrições e **confirmação por código enviado por e-mail** (cada pessoa só se inscreve uma vez)
-- **Sorteio por roleta**, desenhada em CSS, em dois tipos escolhidos em cada evento:
+- **Sorteio por roleta**, desenhada em CSS, em três tipos escolhidos em cada evento:
   - **Roleta de brindes:** a roleta mostra os brindes e para no brinde sorteado, enquanto os nomes dos participantes passam até revelar quem ganhou
   - **Roleta de participantes:** a organização escolhe o brinde da rodada e a roleta gira com os nomes de quem está concorrendo, parando no ganhador (ideal para evento com um brinde só)
+  - **Roleta interativa:** cada pessoa se inscreve e gira a roleta de brindes no próprio celular ou computador, arrastando com o dedo ou o mouse; todo inscrito ganha um brinde enquanto houver
 - **Telão de sorteio** para projetor: animação, confete, atalho de teclado (Enter/Espaço) e tela cheia, sobre a estampa da OCC com efeito parallax (acompanha o mouse e a rolagem)
 - **Sorteio ao vivo** em `/live/<id-do-evento>`: qualquer pessoa com o link (ou QR Code) acompanha cada sorteio em tempo real pelo celular, junto com o telão, e vê quantas pessoas estão assistindo
 - **Prêmio desbloqueado / Resgatar brinde:** ao revelar o ganhador, o palco mostra o cartão do prêmio; quando a pessoa retira o brinde, a organização clica em **Resgatar** e uma comemoração (moeda OCC girando, explosão de luz) aparece no telão e em todos os celulares
@@ -25,9 +26,14 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 ## Regras do sorteio
 
 - O brinde e o ganhador são escolhidos **no servidor** com gerador aleatório criptográfico (`crypto.randomInt`). A roleta e os nomes passando são apenas a animação desse resultado.
-- **Roleta de brindes:** cada unidade restante é uma chance igual, como bilhetes num saco. Um brinde com 3 unidades restantes tem 3 vezes mais chance que um com 1. As fatias da roleta ocupam exatamente essa proporção.
+- **Roleta de brindes:** cada unidade restante é uma chance igual, como bilhetes num saco. Um brinde com 3 unidades restantes tem 3 vezes mais chance que um com 1. Na tela, cada brinde disponível aparece **uma vez**, em fatias do mesmo tamanho, seja qual for o estoque; ele só sai da roleta quando acaba.
 - **Roleta de participantes:** o ganhador é sorteado entre **todos** os participantes aptos, com a mesma chance para cada um. A roleta mostra até 12 nomes (o ganhador e outros concorrentes escolhidos ao acaso), então aparecer ou não na roleta não muda a chance de ninguém. O brinde da rodada é o que a organização escolheu em **Valendo** (por padrão, o primeiro com unidades restantes).
-- O tipo de roleta é definido no cadastro do evento e pode ser trocado depois.
+- **Roleta interativa:** o brinde de cada pessoa é sorteado no servidor, do mesmo jeito da roleta de brindes, no instante em que ela confirma a inscrição; o gesto de girar define o sentido, a força e a duração do giro, e a roleta para no brinde sorteado.
+  - Cada pessoa gira uma vez por evento.
+  - O evento aceita tantas inscrições quantas unidades de brinde tiver: quando os brindes acabam, ninguém mais se inscreve (nem recebe o código por e-mail). Um giro anulado devolve a unidade à roleta.
+  - A organização não sorteia nem inscreve ninguém à mão nesse tipo; ela entrega os brindes pela aba **Ganhadores**.
+  - O brinde fica guardado no aparelho em que a pessoa se inscreveu: reabrindo a página ela vê o resultado, sem girar de novo. Em outro aparelho o resultado não aparece, mas continua registrado para a organização.
+- O tipo de roleta é definido no cadastro do evento. Trocar entre a roleta de brindes e a de participantes é livre; entrar ou sair da roleta interativa só enquanto o evento não tem participantes.
 - Cada unidade de um brinde é sorteada separadamente.
 - **Uma pessoa ganha no máximo uma vez por evento.** Se o sorteio dela for anulado (ausência), ela não volta a concorrer.
 - **Telefone obrigatório para todo participante** e único por evento, assim como o e-mail (formatos diferentes do mesmo número são reconhecidos como iguais). O telefone precisa ter um DDD brasileiro válido; celulares precisam do 9 na frente.
@@ -48,6 +54,7 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 | `/`                              | Público      | Sorteios ativos, com inscrição e link para assistir ao vivo |
 | `/register/<id-do-evento>`       | Público      | Inscrição no sorteio (código por e-mail)                   |
 | `/live/<id-do-evento>`           | Público      | Sorteio ao vivo                                            |
+| `/spin/<id-do-evento>`           | Público      | Roleta interativa de quem acabou de se inscrever (e o brinde ganho) |
 | `/admin`                         | Organização  | Eventos (pede a senha em `/admin/login`)                   |
 | `/admin/events/<id-do-evento>`   | Organização  | Participantes, brindes, ganhadores e links públicos        |
 | `/admin/events/<id-do-evento>/draw` | Organização | Telão de sorteio                                        |
@@ -228,12 +235,13 @@ Base: `/api`. Rotas de `/events` exigem `Authorization: Bearer <token>`.
 | POST   | `/auth/login`                                      | `{ password }` → `{ token, expiresIn }`      |
 | GET    | `/public/events`                                   | Sorteios ativos (página inicial), com `remainingUnits` |
 | GET    | `/public/events/:eventId`                          | Dados públicos do evento                     |
+| GET    | `/public/events/:eventId/prizes`                   | Brindes como a roleta mostra: nome, foto e unidades restantes |
 | POST   | `/public/events/:eventId/registrations`            | Inscrição, etapa 1: `{ name, phone, email }` → envia o código por e-mail |
-| POST   | `/public/events/:eventId/registrations/:id/confirm`| Inscrição, etapa 2: `{ code }` → cria o participante |
+| POST   | `/public/events/:eventId/registrations/:id/confirm`| Inscrição, etapa 2: `{ code }` → cria o participante; na roleta interativa devolve também `spin` (brinde ganho e a roleta) |
 | POST   | `/public/events/:eventId/registrations/:id/resend` | Reenvia o código                              |
 | GET    | `/public/events/:eventId/live`                     | Sorteio ao vivo (SSE): `snapshot`, `draw_started`, `draw_revealed`, `draw_claimed`, `draw_voided`, `viewers` |
 | GET    | `/events`                                          | Lista eventos                                |
-| POST   | `/events`                                          | Cria evento `{ name, drawMode?, ... }` (`drawMode`: `PRIZES` ou `PARTICIPANTS`) |
+| POST   | `/events`                                          | Cria evento `{ name, drawMode?, ... }` (`drawMode`: `PRIZES`, `PARTICIPANTS` ou `INTERACTIVE`) |
 | GET    | `/events/:eventId`                                 | Evento + estatísticas                        |
 | PATCH  | `/events/:eventId`                                 | Atualiza evento (ex.: abrir inscrições, tipo de roleta) |
 | DELETE | `/events/:eventId`                                 | Exclui evento e tudo relacionado             |

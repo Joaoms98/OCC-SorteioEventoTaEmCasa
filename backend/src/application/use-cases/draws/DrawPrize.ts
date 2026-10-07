@@ -13,6 +13,7 @@ import type { LiveDrawChannel, LiveDrawWheel } from '../../ports/LiveDrawChannel
 import type { RandomNumberGenerator } from '../../ports/RandomNumberGenerator.ts';
 import type { TransactionManager } from '../../ports/TransactionManager.ts';
 import { requireEvent, requirePrizeOfEvent } from '../shared/guards.ts';
+import { pickRoulettePrize } from './roulettePrize.ts';
 
 export interface DrawPrizeInput {
   eventId: string;
@@ -79,37 +80,14 @@ export class DrawPrize {
     return { prize, drawnUnits };
   }
 
-  /**
-   * Every remaining unit is one equal chance, like tickets in a bag: a prize with 3 units left is
-   * three times as likely as a prize with 1. The live roulette draws its slices in the same proportion.
-   */
-  private async rouletteRandomPrize(eventId: string): Promise<{ prize: Prize; drawnUnits: number }> {
-    const [prizes, drawnByPrize] = await Promise.all([
-      this.prizes.findByEvent(eventId),
-      this.draws.countConfirmedByEventGroupedByPrize(eventId),
-    ]);
-    const available = prizes
-      .map((prize) => ({ prize, drawnUnits: drawnByPrize.get(prize.id) ?? 0 }))
-      .filter(({ prize, drawnUnits }) => prize.remainingUnits(drawnUnits) > 0);
-
-    const totalUnits = available.reduce((sum, { prize, drawnUnits }) => sum + prize.remainingUnits(drawnUnits), 0);
-    if (totalUnits === 0) throw new BusinessRuleError(ErrorCode.NoPrizesAvailable);
-
-    let ticket = this.random.nextInt(totalUnits);
-    for (const candidate of available) {
-      ticket -= candidate.prize.remainingUnits(candidate.drawnUnits);
-      if (ticket < 0) return candidate;
-    }
-    throw new Error('Unreachable: ticket outside of the remaining units');
-  }
-
   private drawWinner(input: DrawPrizeInput, drawId: string): Promise<Omit<DrawPrizeOutput, 'landingAt' | 'revealAt'>> {
     // The event lock serializes draws, so stock and eligibility cannot change mid-draw.
     return this.transaction.run(async () => {
       const event = await requireEvent(this.events, input.eventId, { lock: true });
+      event.ensureOrganizerDraws();
       const { prize, drawnUnits } = input.prizeId
         ? await this.chosenPrize(event.id, input.prizeId)
-        : await this.rouletteRandomPrize(event.id);
+        : await pickRoulettePrize(this.prizes, this.draws, this.random, event.id);
 
       const eligibleCount = await this.participants.countEligibleForDraw(event.id);
       if (eligibleCount === 0) throw new BusinessRuleError(ErrorCode.NoEligibleParticipants);

@@ -12,6 +12,7 @@ import type { RandomNumberGenerator } from '../../ports/RandomNumberGenerator.ts
 import type { VerificationCodeHasher } from '../../ports/VerificationCodeHasher.ts';
 import { ensureContactsAvailable } from '../participants/ensureContactsAvailable.ts';
 import { requireEvent } from '../shared/guards.ts';
+import type { InteractiveRoulette } from './InteractiveRoulette.ts';
 import { generateVerificationCode } from './verificationCode.ts';
 import { sendCode } from './sendCode.ts';
 
@@ -47,11 +48,14 @@ export class StartRegistration {
     private readonly random: RandomNumberGenerator,
     private readonly ids: IdGenerator,
     private readonly clock: Clock,
+    private readonly interactive: InteractiveRoulette,
   ) {}
 
   async execute(input: StartRegistrationInput): Promise<StartRegistrationOutput> {
     const event = await requireEvent(this.events, input.eventId);
     event.ensureRegistrationOpen();
+    // Interactive roulette: no prize left means no spin, so do not even send the code.
+    if (event.isInteractive) await this.interactive.ensurePrizesLeft(event.id);
     if (!input.email?.trim()) throw new InvalidInputError(ErrorCode.EmailRequired, { field: 'email' });
 
     const now = this.clock.now();

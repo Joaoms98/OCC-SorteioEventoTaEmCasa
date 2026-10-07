@@ -13,25 +13,36 @@ import {
 const prize = (id: string, remainingUnits: number): WheelPrize => ({ id, name: id, remainingUnits, imageUrl: null });
 
 describe('buildWheel', () => {
-  it('gives one slice per unit and interleaves repeated prizes', () => {
-    const segments = buildWheel([prize('kit', 3), prize('mug', 1), prize('none', 0)]);
-    expect(segments.map((s) => s.targetId)).toEqual(['kit', 'mug', 'kit', 'kit']);
-    expect(segments.every((s) => s.end - s.start === 90)).toBe(true);
-    expect(segments.at(-1)!.end).toBeCloseTo(360);
+  it('shows each prize that still has units once, in the order they were registered', () => {
+    const segments = buildWheel([prize('kit', 3), prize('mug', 1), prize('none', 0), prize('cap', 4)]);
+    expect(segments.map((s) => s.targetId)).toEqual(['kit', 'mug', 'cap']);
+    expect(segments.map((s) => [s.start, s.end])).toEqual([
+      [0, 120],
+      [120, 240],
+      [240, 360],
+    ]);
   });
 
-  it('keeps each prize angle proportional to its odds when units do not fit', () => {
-    const segments = buildWheel([prize('big', 90), prize('small', 10)]);
-    const share = (id: string) =>
-      segments.filter((s) => s.targetId === id).reduce((sum, s) => sum + s.end - s.start, 0);
-    expect(segments.length).toBeLessThanOrEqual(17);
-    expect(share('big')).toBeCloseTo(324);
-    expect(share('small')).toBeCloseTo(36);
+  it('does not draw the stock: slices are the same size whatever the units left', () => {
+    const segments = buildWheel([prize('big', 90), prize('small', 1)]);
+    expect(segments).toHaveLength(2);
+    expect(segments.every((s) => s.end - s.start === 180)).toBe(true);
+    // The wheel only changes when a prize runs out.
+    expect(buildWheel([prize('big', 89), prize('small', 1)]).map((s) => [s.targetId, s.start, s.end])).toEqual(
+      segments.map((s) => [s.targetId, s.start, s.end]),
+    );
+    expect(buildWheel([prize('big', 89), prize('small', 0)]).map((s) => s.targetId)).toEqual(['big']);
+  });
+
+  it('a single prize takes the whole wheel', () => {
+    const [only, ...rest] = buildWheel([prize('kit', 50)]);
+    expect(rest).toEqual([]);
+    expect([only!.start, only!.end]).toEqual([0, 360]);
   });
 
   it('never paints two touching slices with the same color', () => {
     for (const units of [2, 5, 6, 11, 16]) {
-      const segments = buildWheel(Array.from({ length: units }, (_, i) => prize(`p${i}`, 1)));
+      const segments = buildWheel(Array.from({ length: units }, (_, i) => prize(`p${i}`, 1 + (i % 4))));
       segments.forEach((segment, i) => {
         const next = segments[(i + 1) % segments.length]!;
         expect(segment.color.background).not.toBe(next.color.background);

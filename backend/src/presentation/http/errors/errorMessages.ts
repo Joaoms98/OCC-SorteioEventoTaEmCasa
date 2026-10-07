@@ -33,6 +33,12 @@ const messages: Record<ApiErrorCode, MessageResolver> = {
     `A quantidade não pode ser menor que o total de unidades já sorteadas (${String(details.drawnUnits ?? 0)}).`,
   [ErrorCode.NoEligibleParticipants]: 'Não há participantes aptos para o sorteio.',
   [ErrorCode.RegistrationClosed]: 'As inscrições para este evento estão encerradas.',
+  [ErrorCode.PrizesExhausted]: 'Os brindes deste evento acabaram, então as inscrições foram encerradas.',
+  [ErrorCode.OrganizerDrawNotAllowed]: 'Na roleta interativa cada participante gira a própria roleta; não há sorteio feito pela organização.',
+  [ErrorCode.ManualRegistrationNotAllowed]:
+    'Na roleta interativa a inscrição é feita pela própria pessoa, pelo link do evento, para que ela gire a roleta.',
+  [ErrorCode.DrawModeLocked]:
+    'A roleta interativa só pode ser escolhida (ou trocada por outro tipo) enquanto o evento não tem participantes.',
   [ErrorCode.DrawAlreadyVoided]: 'Este sorteio já foi anulado.',
   [ErrorCode.DrawInProgress]: 'Aguarde a revelação do sorteio em andamento antes de sortear novamente.',
   [ErrorCode.DrawNotRevealed]: 'Aguarde a revelação do ganhador antes de entregar o brinde.',

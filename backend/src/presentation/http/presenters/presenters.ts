@@ -2,6 +2,7 @@ import type { EventOverview } from '../../../application/use-cases/events/GetEve
 import type { ActiveEvent } from '../../../application/use-cases/events/ListActiveEvents.ts';
 import type { ImportParticipantsOutput } from '../../../application/use-cases/participants/ImportParticipants.ts';
 import type { PrizeAvailability } from '../../../application/use-cases/prizes/PrizeAvailability.ts';
+import type { ConfirmRegistrationOutput } from '../../../application/use-cases/registration/ConfirmRegistration.ts';
 import type { Event } from '../../../domain/entities/Event.ts';
 import type { RegistrationVerification } from '../../../domain/entities/RegistrationVerification.ts';
 import type { Participant } from '../../../domain/entities/Participant.ts';
@@ -74,6 +75,26 @@ export const presentPrize = ({ prize, drawnUnits, remainingUnits }: PrizeAvailab
   remainingUnits,
   createdAt: iso(prize.createdAt),
   updatedAt: iso(prize.updatedAt),
+});
+
+/** What anyone may know about a prize: enough to draw the roulette. */
+export const presentPublicPrize = ({ prize, remainingUnits }: PrizeAvailability) => ({
+  id: prize.id,
+  name: prize.name,
+  imageUrl: prizeImageUrl(prize),
+  remainingUnits,
+});
+
+/** Contact data is not echoed back on the public endpoint. */
+export const presentRegistrationResult = ({ participant, spin }: ConfirmRegistrationOutput) => ({
+  id: participant.id,
+  name: participant.name,
+  // Interactive roulette: the prize was already drawn; the wheel on the phone lands on it.
+  spin: spin && {
+    drawId: spin.draw.id,
+    prize: { id: spin.prize.id, name: spin.prize.name, imageUrl: prizeImageUrl(spin.prize) },
+    wheel: spin.wheel.map(presentPublicPrize),
+  },
 });
 
 export const presentDraw = ({ draw, participant, prize }: DrawDetails) => ({

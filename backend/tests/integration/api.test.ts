@@ -261,6 +261,75 @@ describe('HTTP API', () => {
     expect(closed.body.error.message).toBe('As inscrições para este evento estão encerradas.');
   });
 
+  describe('interactive roulette', () => {
+    let eventId: string;
+    let shirtId: string;
+
+    beforeEach(async () => {
+      const event = await request(ctx.app)
+        .post('/api/events')
+        .set(auth)
+        .send({ name: 'Roleta interativa', registrationOpen: true, drawMode: 'INTERACTIVE' });
+      eventId = event.body.id;
+      const shirt = await request(ctx.app).post(`/api/events/${eventId}/prizes`).set(auth).send({ name: 'Camiseta', quantity: 1 });
+      shirtId = shirt.body.id;
+    });
+
+    const register = (name: string, digit: number) =>
+      registerWithCode(ctx.app, ctx.emails, eventId, { name, phone: `1198765430${digit}`, email: `${name.toLowerCase()}@mail.com` });
+
+    it('shows the prizes of the wheel to anyone, with nothing but name, photo and units left', async () => {
+      const prizes = await request(ctx.app).get(`/api/public/events/${eventId}/prizes`).expect(200);
+      expect(prizes.body).toEqual([{ id: shirtId, name: 'Camiseta', imageUrl: null, remainingUnits: 1 }]);
+      await request(ctx.app).get(`/api/public/events/${UNKNOWN_ID}/prizes`).expect(404);
+    });
+
+    it('confirming the code returns the prize won and the wheel to spin; the next person finds no prize', async () => {
+      const ana = await register('Ana', 1);
+      expect(ana.status).toBe(201);
+      expect(ana.body).toEqual({
+        id: expect.any(String),
+        name: 'Ana',
+        spin: {
+          drawId: expect.any(String),
+          prize: { id: shirtId, name: 'Camiseta', imageUrl: null },
+          wheel: [{ id: shirtId, name: 'Camiseta', imageUrl: null, remainingUnits: 1 }],
+        },
+      });
+      expect(JSON.stringify(ana.body)).not.toContain('11987654301');
+
+      const bruno = await register('Bruno', 2);
+      expect(bruno.status).toBe(422);
+      expect(bruno.body.error).toEqual({
+        code: 'PRIZES_EXHAUSTED',
+        message: 'Os brindes deste evento acabaram, então as inscrições foram encerradas.',
+      });
+
+      // The organizer sees the winner (with contact) and hands the prize over.
+      const draws = await request(ctx.app).get(`/api/events/${eventId}/draws`).set(auth).expect(200);
+      expect(draws.body).toEqual([
+        expect.objectContaining({ id: ana.body.spin.drawId, participant: expect.objectContaining({ name: 'Ana', phone: '11987654301' }) }),
+      ]);
+      await request(ctx.app).post(`/api/events/${eventId}/draws/${ana.body.spin.drawId}/claim`).set(auth).expect(200);
+    });
+
+    it('the organizer cannot draw nor add people, and gets the reason in Portuguese', async () => {
+      const draw = await request(ctx.app).post(`/api/events/${eventId}/draws`).set(auth).send({});
+      expect(draw.status).toBe(422);
+      expect(draw.body.error.message).toBe(
+        'Na roleta interativa cada participante gira a própria roleta; não há sorteio feito pela organização.',
+      );
+      const added = await request(ctx.app).post(`/api/events/${eventId}/participants`).set(auth).send({ name: 'Zé', phone: '11987654309' });
+      expect(added.status).toBe(422);
+      expect(added.body.error.code).toBe('MANUAL_REGISTRATION_NOT_ALLOWED');
+
+      await register('Ana', 1);
+      const changed = await request(ctx.app).patch(`/api/events/${eventId}`).set(auth).send({ drawMode: 'PRIZES' });
+      expect(changed.status).toBe(422);
+      expect(changed.body.error.code).toBe('DRAW_MODE_LOCKED');
+    });
+  });
+
   it('home page: lists active events without login and without internal fields', async () => {
     await request(ctx.app).post('/api/events').set(auth).send({ name: 'Rascunho' });
     const open = await request(ctx.app).post('/api/events').set(auth).send({ name: 'Aberto', registrationOpen: true });
@@ -327,7 +396,7 @@ describe('HTTP API', () => {
       ]);
 
       const confirmed = await request(ctx.app).post(confirmPath).send({ code }).expect(201);
-      expect(confirmed.body).toEqual({ id: expect.any(String), name: 'Ana Lima' });
+      expect(confirmed.body).toEqual({ id: expect.any(String), name: 'Ana Lima', spin: null });
       const listAfter = await request(ctx.app).get(`/api/events/${eventId}/participants`).set(auth);
       expect(listAfter.body.items).toEqual([expect.objectContaining({ phone: '11987654321', email: 'ana@mail.com' })]);
 
