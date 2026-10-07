@@ -1,5 +1,11 @@
 # OCC — Sorteio de Brindes
 
+
+Link do site:
+
+oscremaculture.com.br
+
+
 Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, criado para o evento beneficente **Tá em Casa**. Código aberto e software livre.
 
 - **Backend:** Node.js + TypeScript, Express 5, Prisma 7 + PostgreSQL — em Clean Architecture
