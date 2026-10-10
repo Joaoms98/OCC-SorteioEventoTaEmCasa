@@ -3,6 +3,7 @@ import type { GetPublicEvent } from '../../../application/use-cases/events/GetPu
 import type { ListActiveEvents } from '../../../application/use-cases/events/ListActiveEvents.ts';
 import type { ListPrizes } from '../../../application/use-cases/prizes/ListPrizes.ts';
 import type { ConfirmRegistration } from '../../../application/use-cases/registration/ConfirmRegistration.ts';
+import type { RegisterAndSpin } from '../../../application/use-cases/registration/RegisterAndSpin.ts';
 import type { ResendRegistrationCode } from '../../../application/use-cases/registration/ResendRegistrationCode.ts';
 import type { StartRegistration } from '../../../application/use-cases/registration/StartRegistration.ts';
 import {
@@ -11,11 +12,13 @@ import {
   presentPublicPrize,
   presentRegistrationResult,
   presentRegistrationVerification,
+  presentSpinResult,
 } from '../presenters/presenters.ts';
 import { parseInput, parseParams } from '../validation/parse.ts';
 import {
   confirmRegistrationSchema,
   eventParamsSchema,
+  registerAndSpinSchema,
   startRegistrationSchema,
   verificationParamsSchema,
 } from '../validation/schemas.ts';
@@ -26,6 +29,7 @@ export interface PublicEventUseCases {
   listPrizes: ListPrizes;
   startRegistration: StartRegistration;
   confirmRegistration: ConfirmRegistration;
+  registerAndSpin: RegisterAndSpin;
   resendRegistrationCode: ResendRegistrationCode;
 }
 
@@ -65,6 +69,14 @@ export class PublicEventController {
     const { code } = parseInput(confirmRegistrationSchema, req.body);
     const result = await this.useCases.confirmRegistration.execute({ ...params, code });
     res.status(201).json(presentRegistrationResult(result));
+  };
+
+  /** Interactive roulette: registers and draws the prize in one step, with no e-mail code. */
+  registerAndSpin: RequestHandler = async (req, res) => {
+    const { eventId } = parseParams(eventParamsSchema, req.params);
+    const input = parseInput(registerAndSpinSchema, req.body);
+    const result = await this.useCases.registerAndSpin.execute({ eventId, ...input });
+    res.status(201).json(presentSpinResult(result));
   };
 
   resendCode: RequestHandler = async (req, res) => {

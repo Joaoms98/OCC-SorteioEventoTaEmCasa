@@ -7,7 +7,7 @@ import { Alert } from '../components/Alert';
 import { Spinner } from '../components/Spinner';
 import { useAsyncData } from '../hooks/useAsyncData';
 import { ParallaxBackground } from '../live/ParallaxBackground';
-import { readSpin, registeredNameFor } from '../registration/registrationStorage';
+import { registeredNameFor } from '../registration/registrationStorage';
 import { publicPaths } from '../routes';
 import type { ActiveEvent } from '../types/api';
 import { formatDateTime, pluralize } from '../utils/format';
@@ -68,11 +68,11 @@ export function HomePage() {
 }
 
 function ActiveEventCard({ event }: { event: ActiveEvent }) {
-  // Registrations made on this phone: no need to offer the form again.
-  const registeredName = registeredNameFor(event.id);
   // Interactive roulette: registering is spinning, so it ends when the prizes do.
   const interactive = event.drawMode === 'INTERACTIVE';
-  const spin = interactive && registeredName ? readSpin(event.id) : null;
+  // Registrations made on this phone: no need to offer the form again. The interactive roulette
+  // serves one person after another on the same screen, so it never remembers anyone.
+  const registeredName = interactive ? null : registeredNameFor(event.id);
   const exhausted = interactive && event.remainingUnits === 0;
   const canRegister = event.registrationOpen && !registeredName && !exhausted;
 
@@ -109,12 +109,7 @@ function ActiveEventCard({ event }: { event: ActiveEvent }) {
             {interactive ? 'Participar e girar a roleta' : 'Quero participar'}
           </Link>
         )}
-        {spin && (
-          <Link to={publicPaths.spin(event.id)} className="btn btn-primary btn-block">
-            <Gift size={18} aria-hidden="true" /> {spin.landed ? 'Ver meu brinde' : 'Girar a roleta'}
-          </Link>
-        )}
-        <Link to={publicPaths.live(event.id)} className={`btn ${canRegister || spin ? 'btn-secondary' : 'btn-primary'} btn-block`}>
+        <Link to={publicPaths.live(event.id)} className={`btn ${canRegister ? 'btn-secondary' : 'btn-primary'} btn-block`}>
           <Radio size={18} aria-hidden="true" /> Assistir ao vivo
         </Link>
       </div>

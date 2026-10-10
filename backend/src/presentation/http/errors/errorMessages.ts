@@ -37,6 +37,9 @@ const messages: Record<ApiErrorCode, MessageResolver> = {
   [ErrorCode.OrganizerDrawNotAllowed]: 'Na roleta interativa cada participante gira a própria roleta; não há sorteio feito pela organização.',
   [ErrorCode.ManualRegistrationNotAllowed]:
     'Na roleta interativa a inscrição é feita pela própria pessoa, pelo link do evento, para que ela gire a roleta.',
+  [ErrorCode.EmailCodeNotUsed]: 'A roleta interativa não usa código por e-mail. Atualize a página para participar.',
+  [ErrorCode.NotInteractiveRoulette]:
+    'Este sorteio não é uma roleta interativa: a inscrição é confirmada pelo código enviado por e-mail.',
   [ErrorCode.DrawModeLocked]:
     'A roleta interativa só pode ser escolhida (ou trocada por outro tipo) enquanto o evento não tem participantes.',
   [ErrorCode.DrawAlreadyVoided]: 'Este sorteio já foi anulado.',
@@ -44,7 +47,7 @@ const messages: Record<ApiErrorCode, MessageResolver> = {
   [ErrorCode.DrawNotRevealed]: 'Aguarde a revelação do ganhador antes de entregar o brinde.',
   [ErrorCode.PrizeAlreadyClaimed]: 'O brinde deste sorteio já foi entregue.',
   [ErrorCode.PhoneRequired]: 'Informe o telefone com DDD.',
-  [ErrorCode.EmailRequired]: 'Informe seu e-mail para receber o código de confirmação.',
+  [ErrorCode.EmailRequired]: 'Informe seu e-mail.',
   [ErrorCode.VerificationExpired]: 'O código expirou. Peça um novo código.',
   [ErrorCode.InvalidVerificationCode]: (details) => {
     const left = Number(details.attemptsLeft ?? 0);

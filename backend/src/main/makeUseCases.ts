@@ -33,6 +33,7 @@ import { SetPrizeImage } from '../application/use-cases/prizes/SetPrizeImage.ts'
 import { UpdatePrize } from '../application/use-cases/prizes/UpdatePrize.ts';
 import { ConfirmRegistration } from '../application/use-cases/registration/ConfirmRegistration.ts';
 import { InteractiveRoulette } from '../application/use-cases/registration/InteractiveRoulette.ts';
+import { RegisterAndSpin } from '../application/use-cases/registration/RegisterAndSpin.ts';
 import { ResendRegistrationCode } from '../application/use-cases/registration/ResendRegistrationCode.ts';
 import { StartRegistration } from '../application/use-cases/registration/StartRegistration.ts';
 import type { DrawRepository } from '../domain/repositories/DrawRepository.ts';
@@ -98,11 +99,12 @@ export function makeUseCases(deps: UseCaseDependencies): HttpUseCases {
     getLiveBoard: new GetLiveBoard(events, participants, prizes, draws, live, random),
 
     startRegistration: new StartRegistration(
-      events, participants, deps.verifications, deps.codeHasher, deps.emailSender, random, ids, clock, interactive,
+      events, participants, deps.verifications, deps.codeHasher, deps.emailSender, random, ids, clock,
     ),
     confirmRegistration: new ConfirmRegistration(
-      transaction, events, participants, deps.verifications, deps.codeHasher, ids, clock, interactive,
+      transaction, events, participants, deps.verifications, deps.codeHasher, ids, clock,
     ),
+    registerAndSpin: new RegisterAndSpin(transaction, events, participants, ids, clock, interactive),
     resendRegistrationCode: new ResendRegistrationCode(
       events, deps.verifications, deps.codeHasher, deps.emailSender, random, clock,
     ),

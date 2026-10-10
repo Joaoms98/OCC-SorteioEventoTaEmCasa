@@ -36,6 +36,7 @@ export class ResendRegistrationCode {
     const event = await requireEvent(this.events, input.eventId);
     const verification = await this.verifications.findById(input.verificationId);
     if (!verification?.belongsTo(event.id)) throw new NotFoundError(ErrorCode.VerificationNotFound);
+    event.ensureRegistersByEmailCode();
     event.ensureRegistrationOpen();
 
     const code = generateVerificationCode(this.random);

@@ -78,14 +78,20 @@ export const addParticipantSchema = z.object({
   email: optionalEmail,
 });
 
+const requiredEmail = (missing: string) =>
+  z.string({ error: 'Informe seu e-mail.' }).trim().min(1, missing).max(160, 'E-mail inválido.');
+
 export const startRegistrationSchema = z.object({
   name: name('do participante'),
   phone: requiredPhone,
-  email: z
-    .string({ error: 'Informe seu e-mail.' })
-    .trim()
-    .min(1, 'Informe seu e-mail para receber o código de confirmação.')
-    .max(160, 'E-mail inválido.'),
+  email: requiredEmail('Informe seu e-mail para receber o código de confirmação.'),
+});
+
+/** Interactive roulette: same data as a registration, with no code to wait for. */
+export const registerAndSpinSchema = z.object({
+  name: name('do participante'),
+  phone: requiredPhone,
+  email: requiredEmail('Informe seu e-mail.'),
 });
 
 export const confirmRegistrationSchema = z.object({

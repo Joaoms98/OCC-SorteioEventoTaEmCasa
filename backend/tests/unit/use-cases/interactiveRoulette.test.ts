@@ -19,71 +19,102 @@ describe('Interactive roulette', () => {
     mugId = (await createPrize.execute({ eventId, name: 'Caneca', quantity: 1 })).prize.id;
   });
 
-  /** Public registration, both steps; `ticket` is the random position among the remaining units. */
-  async function register(name: string, ticket = 0) {
-    const email = `${name.toLowerCase()}@mail.com`;
-    ctx.random.enqueue(0); // verification code
-    const { verification } = await ctx.useCases.startRegistration.execute({ eventId, name, phone: nextPhone(), email });
+  /** Registers and spins in one step; `ticket` is the random position among the remaining units. */
+  function register(name: string, ticket = 0, overrides: { phone?: string; email?: string } = {}) {
     ctx.random.enqueue(ticket);
-    return ctx.useCases.confirmRegistration.execute({ eventId, verificationId: verification.id, code: ctx.emails.lastCodeFor(email) });
+    return ctx.useCases.registerAndSpin.execute({ eventId, name, phone: nextPhone(), email: `${name.toLowerCase()}@mail.com`, ...overrides });
   }
 
-  it('whoever registers wins a prize right away, drawn by the remaining units', async () => {
+  it('whoever registers wins a prize right away, drawn by the remaining units, with no e-mail code', async () => {
     const { participant, spin } = await register('Ana', 2); // tickets: Camiseta, Camiseta, Caneca
 
-    expect(spin?.prize.id).toBe(mugId);
-    expect(spin?.wheel.map(({ prize, remainingUnits }) => [prize.name, remainingUnits])).toEqual([
+    expect(participant).toMatchObject({ name: 'Ana', email: 'ana@mail.com' });
+    expect(spin.prize.id).toBe(mugId);
+    expect(spin.wheel.map(({ prize, remainingUnits }) => [prize.name, remainingUnits])).toEqual([
       ['Camiseta', 2],
       ['Caneca', 1],
     ]);
     const draws = [...ctx.db.draws.values()];
     expect(draws).toHaveLength(1);
     expect(draws[0]).toMatchObject({ participantId: participant.id, prizeId: mugId, status: DrawStatus.Confirmed, claimedAt: null });
+    expect(ctx.emails.sent).toHaveLength(0);
   });
 
   it('the next wheel no longer has the units already won', async () => {
     await register('Ana', 2);
     const { spin } = await register('Bruno', 1);
 
-    expect(spin?.prize.id).toBe(shirtId);
-    expect(spin?.wheel.map(({ prize, remainingUnits }) => [prize.name, remainingUnits])).toEqual([['Camiseta', 2]]);
+    expect(spin.prize.id).toBe(shirtId);
+    expect(spin.wheel.map(({ prize, remainingUnits }) => [prize.name, remainingUnits])).toEqual([['Camiseta', 2]]);
   });
 
-  it('takes as many participants as it has prizes: after that nobody registers nor gets a code', async () => {
+  it('takes as many participants as it has prizes: after that nobody registers', async () => {
     await register('Ana');
     await register('Bruno');
     await register('Carla');
-    const sentBefore = ctx.emails.sent.length;
 
     await expect(register('Davi')).rejects.toMatchObject({ code: ErrorCode.PrizesExhausted });
-    expect(ctx.emails.sent).toHaveLength(sentBefore);
     expect(ctx.db.participants.size).toBe(3);
     expect(ctx.db.draws.size).toBe(3);
   });
 
-  it('whoever confirms after the last prize is gone is not registered', async () => {
-    ctx.random.enqueue(0);
-    const late = await ctx.useCases.startRegistration.execute({ eventId, name: 'Atrasada', phone: nextPhone(), email: 'late@mail.com' });
-    await register('Ana');
-    await register('Bruno');
-    await register('Carla');
+  it('a refused registration spends no prize: repeated contact, missing e-mail, invalid phone, closed event', async () => {
+    const ana = await register('Ana');
 
+    await expect(register('Outra', 0, { phone: ana.participant.phone! })).rejects.toMatchObject({
+      code: ErrorCode.ParticipantAlreadyRegistered,
+      details: { field: 'phone' },
+    });
+    await expect(register('Outra', 0, { email: 'ANA@mail.com' })).rejects.toMatchObject({
+      code: ErrorCode.ParticipantAlreadyRegistered,
+      details: { field: 'email' },
+    });
+    await expect(register('Outra', 0, { email: '  ' })).rejects.toMatchObject({ code: ErrorCode.EmailRequired });
+    await expect(register('Outra', 0, { phone: '123' })).rejects.toMatchObject({ code: ErrorCode.InvalidPhone });
+    await ctx.useCases.updateEvent.execute({ eventId, changes: { registrationOpen: false } });
+    await expect(register('Outra')).rejects.toMatchObject({ code: ErrorCode.RegistrationClosed });
+
+    expect(ctx.db.participants.size).toBe(1);
+    expect(ctx.db.draws.size).toBe(1);
+  });
+
+  it('does not use the e-mail code: asking for one is refused and nothing is sent', async () => {
     await expect(
-      ctx.useCases.confirmRegistration.execute({ eventId, verificationId: late.verification.id, code: ctx.emails.lastCodeFor('late@mail.com') }),
-    ).rejects.toMatchObject({ code: ErrorCode.PrizesExhausted });
-    expect(ctx.db.participants.size).toBe(3);
-    expect(ctx.db.draws.size).toBe(3);
+      ctx.useCases.startRegistration.execute({ eventId, name: 'Ana', phone: nextPhone(), email: 'ana@mail.com' }),
+    ).rejects.toMatchObject({ code: ErrorCode.EmailCodeNotUsed });
+    expect(ctx.emails.sent).toHaveLength(0);
+    expect(ctx.verifications.items.size).toBe(0);
+  });
+
+  it('a code sent before the event became an interactive roulette registers nobody', async () => {
+    const turned = await ctx.useCases.createEvent.execute({ name: 'Virou roleta', registrationOpen: true });
+    await ctx.useCases.createPrize.execute({ eventId: turned.id, name: 'Boné', quantity: 1 });
+    ctx.random.enqueue(0);
+    const { verification } = await ctx.useCases.startRegistration.execute({
+      eventId: turned.id,
+      name: 'Eva',
+      phone: nextPhone(),
+      email: 'eva@mail.com',
+    });
+    await ctx.useCases.updateEvent.execute({ eventId: turned.id, changes: { drawMode: DrawMode.Interactive } });
+    const pending = { eventId: turned.id, verificationId: verification.id };
+
+    await expect(ctx.useCases.confirmRegistration.execute({ ...pending, code: ctx.emails.lastCodeFor('eva@mail.com') })).rejects.toMatchObject({
+      code: ErrorCode.EmailCodeNotUsed,
+    });
+    await expect(ctx.useCases.resendRegistrationCode.execute(pending)).rejects.toMatchObject({ code: ErrorCode.EmailCodeNotUsed });
+    expect(ctx.db.participants.size).toBe(0);
+    expect(ctx.db.draws.size).toBe(0);
   });
 
   it('a voided spin gives the unit back to the wheel, and the prize can be handed over', async () => {
     const ana = await register('Ana');
     await register('Bruno');
     await register('Carla');
-    await ctx.useCases.voidDraw.execute({ eventId, drawId: ana.spin!.draw.id });
+    await ctx.useCases.voidDraw.execute({ eventId, drawId: ana.spin.draw.id });
 
     const { spin } = await register('Davi');
-    expect(spin).not.toBeNull();
-    const claimed = await ctx.useCases.claimPrize.execute({ eventId, drawId: spin!.draw.id });
+    const claimed = await ctx.useCases.claimPrize.execute({ eventId, drawId: spin.draw.id });
     expect(claimed.draw.claimedAt).not.toBeNull();
   });
 
@@ -120,21 +151,22 @@ describe('Interactive roulette', () => {
     });
   });
 
-  it('other event types are untouched: registering does not draw anything', async () => {
+  it('other event types keep the e-mail code: no spin without it, and registering draws nothing', async () => {
     const classic = await ctx.useCases.createEvent.execute({ name: 'Clássico', registrationOpen: true });
+    await ctx.useCases.createPrize.execute({ eventId: classic.id, name: 'Kit', quantity: 1 });
+    const eva = { eventId: classic.id, name: 'Eva', phone: nextPhone(), email: 'eva@mail.com' };
+
+    await expect(ctx.useCases.registerAndSpin.execute(eva)).rejects.toMatchObject({ code: ErrorCode.NotInteractiveRoulette });
+    expect(ctx.db.participants.size).toBe(0);
+
     ctx.random.enqueue(0);
-    const { verification } = await ctx.useCases.startRegistration.execute({
-      eventId: classic.id,
-      name: 'Eva',
-      phone: nextPhone(),
-      email: 'eva@mail.com',
-    });
-    const { spin } = await ctx.useCases.confirmRegistration.execute({
+    const { verification } = await ctx.useCases.startRegistration.execute(eva);
+    const { participant } = await ctx.useCases.confirmRegistration.execute({
       eventId: classic.id,
       verificationId: verification.id,
       code: ctx.emails.lastCodeFor('eva@mail.com'),
     });
-    expect(spin).toBeNull();
+    expect(participant.name).toBe('Eva');
     expect(ctx.db.draws.size).toBe(0);
   });
 });

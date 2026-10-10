@@ -53,7 +53,11 @@ export interface InteractiveSpin {
 export interface RegistrationResult {
   id: string;
   name: string;
-  spin: InteractiveSpin | null;
+}
+
+/** Interactive roulette: registering already answers with the spin. */
+export interface SpinResult extends RegistrationResult {
+  spin: InteractiveSpin;
 }
 
 export interface EventInput {

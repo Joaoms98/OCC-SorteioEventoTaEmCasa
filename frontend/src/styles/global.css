@@ -1021,21 +1021,21 @@ tbody tr:last-child td {
   color: var(--color-brand);
 }
 
-/* Booth mode (shared tablet): after each result, the way on to the next person. */
-.kiosk-next {
+/* Interactive roulette: after each prize, the way on to the next person. */
+.next-person {
   display: grid;
   justify-items: center;
   gap: 0.5rem;
   width: 100%;
 }
 
-.kiosk-next p {
+.next-person p {
   margin: 0;
 }
 
-/* A tablet is read and tapped at arm's length: the form gets more room than on a phone. */
+/* A booth tablet is read and tapped at arm's length: the form gets more room than on a phone. */
 @media (min-width: 700px) {
-  .kiosk-card {
+  .auth-card-wide {
     max-width: 560px;
     padding: 2.25rem;
   }

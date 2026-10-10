@@ -16,18 +16,17 @@ interface PublicLinksCardProps {
   drawMode: DrawMode;
 }
 
-/**
- * Links participants use from their phones: self-registration and the live draw. The interactive
- * roulette also gets the booth link, for a shared tablet.
- */
+/** Links participants use from their phones (or a shared booth tablet): self-registration and the live draw. */
 export function PublicLinksCard({ eventId, registrationOpen, drawMode }: PublicLinksCardProps) {
   const origin = window.location.origin;
   const links: PublicLink[] = [
     {
       title: 'Inscrição pelo celular',
-      description: registrationOpen
-        ? 'Projete o QR Code para os participantes se inscreverem.'
-        : 'Inscrições fechadas: o link mostra uma mensagem de encerramento.',
+      description: !registrationOpen
+        ? 'Inscrições fechadas: o link mostra uma mensagem de encerramento.'
+        : drawMode === 'INTERACTIVE'
+          ? 'Projete o QR Code ou abra o link no tablet do estande: cada pessoa se inscreve, gira a roleta e a tela volta sozinha para a próxima.'
+          : 'Projete o QR Code para os participantes se inscreverem.',
       url: `${origin}${publicPaths.register(eventId)}`,
     },
     {
@@ -36,14 +35,6 @@ export function PublicLinksCard({ eventId, registrationOpen, drawMode }: PublicL
       url: `${origin}${publicPaths.live(eventId)}`,
     },
   ];
-  if (drawMode === 'INTERACTIVE') {
-    links.push({
-      title: 'Modo estande (tablet)',
-      description:
-        'Abra no tablet do estande: cada pessoa se inscreve, gira a roleta e a tela volta sozinha para a próxima, sem guardar nada no aparelho.',
-      url: `${origin}${publicPaths.kiosk(eventId)}`,
-    });
-  }
 
   return (
     <div className="public-links">

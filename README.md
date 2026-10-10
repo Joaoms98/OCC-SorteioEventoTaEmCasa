@@ -22,8 +22,7 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 - **Sorteio por roleta**, desenhada em CSS, em três tipos escolhidos em cada evento:
   - **Roleta de brindes:** a roleta mostra os brindes e para no brinde sorteado, enquanto os nomes dos participantes passam até revelar quem ganhou
   - **Roleta de participantes:** a organização escolhe o brinde da rodada e a roleta gira com os nomes de quem está concorrendo, parando no ganhador (ideal para evento com um brinde só)
-  - **Roleta interativa:** cada pessoa se inscreve e gira a roleta de brindes no próprio celular ou computador, arrastando com o dedo ou o mouse; todo inscrito ganha um brinde enquanto houver
-- **Modo estande** (`/kiosk/<id-do-evento>`): a roleta interativa num tablet compartilhado, com uma pessoa depois da outra; nada fica guardado no aparelho e a tela volta sozinha para a próxima pessoa
+  - **Roleta interativa:** cada pessoa preenche os dados e gira a roleta de brindes na hora (sem código por e-mail), arrastando com o dedo ou o mouse; todo inscrito ganha um brinde enquanto houver. A mesma tela atende uma pessoa depois da outra (tablet no estande ou o celular de cada um): depois do brinde ela volta sozinha para a próxima
 - **Telão de sorteio** para projetor: animação, confete, atalho de teclado (Enter/Espaço) e tela cheia, sobre a estampa da OCC com efeito parallax (acompanha o mouse e a rolagem)
 - **Sorteio ao vivo** em `/live/<id-do-evento>`: qualquer pessoa com o link (ou QR Code) acompanha cada sorteio em tempo real pelo celular, junto com o telão, e vê quantas pessoas estão assistindo
 - **Prêmio desbloqueado / Resgatar brinde:** ao revelar o ganhador, o palco mostra o cartão do prêmio; quando a pessoa retira o brinde, a organização clica em **Resgatar** e uma comemoração (moeda OCC girando, explosão de luz) aparece no telão e em todos os celulares
@@ -35,17 +34,17 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 - O brinde e o ganhador são escolhidos **no servidor** com gerador aleatório criptográfico (`crypto.randomInt`). A roleta e os nomes passando são apenas a animação desse resultado.
 - **Roleta de brindes:** cada unidade restante é uma chance igual, como bilhetes num saco. Um brinde com 3 unidades restantes tem 3 vezes mais chance que um com 1. Na tela, cada brinde disponível aparece **uma vez**, em fatias do mesmo tamanho, seja qual for o estoque; ele só sai da roleta quando acaba.
 - **Roleta de participantes:** o ganhador é sorteado entre **todos** os participantes aptos, com a mesma chance para cada um. A roleta mostra até 12 nomes (o ganhador e outros concorrentes escolhidos ao acaso), então aparecer ou não na roleta não muda a chance de ninguém. O brinde da rodada é o que a organização escolheu em **Valendo** (por padrão, o primeiro com unidades restantes).
-- **Roleta interativa:** o brinde de cada pessoa é sorteado no servidor, do mesmo jeito da roleta de brindes, no instante em que ela confirma a inscrição; o gesto de girar define o sentido, a força e a duração do giro, e a roleta para no brinde sorteado.
+- **Roleta interativa:** o brinde de cada pessoa é sorteado no servidor, do mesmo jeito da roleta de brindes, no instante em que ela se inscreve, num passo só e sem código por e-mail; o gesto de girar define o sentido, a força e a duração do giro, e a roleta para no brinde sorteado.
   - Cada pessoa gira uma vez por evento.
-  - O evento aceita tantas inscrições quantas unidades de brinde tiver: quando os brindes acabam, ninguém mais se inscreve (nem recebe o código por e-mail). Um giro anulado devolve a unidade à roleta.
+  - O evento aceita tantas inscrições quantas unidades de brinde tiver: quando os brindes acabam, ninguém mais se inscreve. Um giro anulado devolve a unidade à roleta.
   - A organização não sorteia nem inscreve ninguém à mão nesse tipo; ela entrega os brindes pela aba **Ganhadores**.
-  - O brinde fica guardado no aparelho em que a pessoa se inscreveu: reabrindo a página ela vê o resultado, sem girar de novo. Em outro aparelho o resultado não aparece, mas continua registrado para a organização.
-  - No **modo estande** (tablet compartilhado) nada fica guardado no aparelho: depois do resultado, o botão **Próxima pessoa** (ou 45 segundos sem ninguém tocar) devolve a tela ao formulário vazio. Uma tela largada pela metade também volta sozinha: formulário e roleta depois de 2 minutos sem toque, código do e-mail depois de 5. O brinde de quem não chegou a girar continua registrado na aba **Ganhadores**.
+  - O resultado **não fica guardado no aparelho**: depois do brinde, o botão **Próxima pessoa** (ou 45 segundos sem ninguém tocar) devolve a tela ao formulário vazio, pronta para outra pessoa. Por isso um tablet no estande atende a fila inteira sem ninguém limpar nada. Quem ganhou o quê fica registrado para a organização na aba **Ganhadores**.
+  - Uma tela largada pela metade também volta sozinha ao início depois de 2 minutos sem toque, seja o formulário ou a roleta. O brinde de quem não chegou a girar continua registrado na aba **Ganhadores**.
 - O tipo de roleta é definido no cadastro do evento. Trocar entre a roleta de brindes e a de participantes é livre; entrar ou sair da roleta interativa só enquanto o evento não tem participantes.
 - Cada unidade de um brinde é sorteada separadamente.
 - **Uma pessoa ganha no máximo uma vez por evento.** Se o sorteio dela for anulado (ausência), ela não volta a concorrer.
 - **Telefone obrigatório para todo participante** e único por evento, assim como o e-mail (formatos diferentes do mesmo número são reconhecidos como iguais). O telefone precisa ter um DDD brasileiro válido; celulares precisam do 9 na frente.
-- **Inscrição pública em duas etapas:** a pessoa informa nome, celular e e-mail e recebe por e-mail um código de 6 números; a inscrição só existe depois que o código é confirmado. Assim ninguém se inscreve com o e-mail de outra pessoa nem repete a inscrição.
+- **Inscrição pública em duas etapas** (roleta de brindes e de participantes; a roleta interativa não usa código): a pessoa informa nome, celular e e-mail e recebe por e-mail um código de 6 números; a inscrição só existe depois que o código é confirmado. Assim ninguém se inscreve com o e-mail de outra pessoa nem repete a inscrição.
   - O código vale 10 minutos e aceita 5 tentativas; pode ser reenviado depois de 1 minuto (até 5 vezes).
   - No máximo 3 inscrições iniciadas por hora para o mesmo e-mail (evita envio de spam).
   - Só o hash do código (HMAC) fica no banco.
@@ -60,15 +59,13 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 | Endereço                         | Quem usa     | O que é                                                    |
 | -------------------------------- | ------------ | ---------------------------------------------------------- |
 | `/`                              | Público      | Sorteios ativos, com inscrição e link para assistir ao vivo |
-| `/register/<id-do-evento>`       | Público      | Inscrição no sorteio (código por e-mail)                   |
+| `/register/<id-do-evento>`       | Público      | Inscrição no sorteio (código por e-mail); na roleta interativa, sem código, a pessoa gira a roleta ali mesmo |
 | `/live/<id-do-evento>`           | Público      | Sorteio ao vivo                                            |
-| `/spin/<id-do-evento>`           | Público      | Roleta interativa de quem acabou de se inscrever (e o brinde ganho) |
-| `/kiosk/<id-do-evento>`          | Público      | Modo estande: inscrição e roleta num tablet compartilhado, uma pessoa depois da outra |
 | `/admin`                         | Organização  | Eventos (pede a senha em `/admin/login`)                   |
 | `/admin/events/<id-do-evento>`   | Organização  | Participantes, brindes, ganhadores e links públicos        |
 | `/admin/events/<id-do-evento>/draw` | Organização | Telão de sorteio                                        |
 
-Um sorteio está **ativo**, e aparece na página inicial, enquanto as inscrições estão abertas ou ainda há brinde para sortear. Rascunho sem brinde e com inscrições fechadas não aparece; evento com tudo sorteado e inscrições fechadas sai da lista. Os endereços antigos (`/login`, `/events/...`) redirecionam para `/admin`.
+Um sorteio está **ativo**, e aparece na página inicial, enquanto as inscrições estão abertas ou ainda há brinde para sortear. Rascunho sem brinde e com inscrições fechadas não aparece; evento com tudo sorteado e inscrições fechadas sai da lista. Os endereços antigos (`/login`, `/events/...`) redirecionam para `/admin`; `/spin/...` e `/kiosk/...`, que a roleta interativa já usou, redirecionam para a inscrição.
 
 ## Sorteio ao vivo
 
@@ -246,8 +243,9 @@ Base: `/api`. Rotas de `/events` exigem `Authorization: Bearer <token>`.
 | GET    | `/public/events/:eventId`                          | Dados públicos do evento                     |
 | GET    | `/public/events/:eventId/prizes`                   | Brindes como a roleta mostra: nome, foto e unidades restantes |
 | POST   | `/public/events/:eventId/registrations`            | Inscrição, etapa 1: `{ name, phone, email }` → envia o código por e-mail |
-| POST   | `/public/events/:eventId/registrations/:id/confirm`| Inscrição, etapa 2: `{ code }` → cria o participante; na roleta interativa devolve também `spin` (brinde ganho e a roleta) |
+| POST   | `/public/events/:eventId/registrations/:id/confirm`| Inscrição, etapa 2: `{ code }` → cria o participante |
 | POST   | `/public/events/:eventId/registrations/:id/resend` | Reenvia o código                              |
+| POST   | `/public/events/:eventId/spins`                    | Roleta interativa: `{ name, phone, email }` → inscreve e sorteia o brinde num passo só; devolve `spin` (brinde ganho e a roleta) |
 | GET    | `/public/events/:eventId/live`                     | Sorteio ao vivo (SSE): `snapshot`, `draw_started`, `draw_revealed`, `draw_claimed`, `draw_voided`, `viewers` |
 | GET    | `/events`                                          | Lista eventos                                |
 | POST   | `/events`                                          | Cria evento `{ name, drawMode?, ... }` (`drawMode`: `PRIZES`, `PARTICIPANTS` ou `INTERACTIVE`) |
@@ -309,7 +307,7 @@ Sem Blueprint, crie um **Web Service** Node com os mesmos comandos de build/star
 - O limite de requisições é contado por visitante (IP). Quem está no mesmo Wi-Fi compartilha um IP: são até 300 chamadas de inscrição a cada 15 minutos por rede, o que dá cerca de 150 inscrições nesse intervalo. Se muita gente for se inscrever ao mesmo tempo no local, abra as inscrições com antecedência.
 - Abra as inscrições, projete o QR Code da página do evento e feche as inscrições antes de começar os sorteios.
 - Divulgue o link **Sorteio ao vivo** (QR Code na página do evento ou no botão **Transmissão** do telão) para quem quiser acompanhar pelo celular.
-- **Roleta interativa no estande:** abra no tablet o link **Modo estande (tablet)** da página do evento, e não o de inscrição pelo celular. Cada pessoa digita os dados no tablet, lê no próprio celular o código que chega por e-mail e gira a roleta; depois é só tocar em **Próxima pessoa**. A página pede ao tablet para não apagar a tela; se ele apagar mesmo assim, aumente o tempo de tela nas configurações do aparelho. O plano gratuito do Brevo envia 300 e-mails por dia, então são no máximo 300 inscrições por dia.
+- **Roleta interativa no estande:** abra no tablet o link de inscrição do evento. Cada pessoa digita os dados, gira a roleta e, depois do brinde, é só tocar em **Próxima pessoa**. Em tablets e computadores a página pede ao aparelho para não apagar a tela; se ele apagar mesmo assim, aumente o tempo de tela nas configurações. Como não há código por e-mail, qualquer pessoa com o link consegue se inscrever: confira o nome na aba **Ganhadores** antes de entregar o brinde e anule o giro de quem não estiver presente (a unidade volta para a roleta).
 - No telão, use **Tela cheia** e gire a roleta com **Enter** ou **Espaço**. Se o ganhador não aparecer, use **Ganhador ausente — anular** e sorteie novamente.
 - Ao final, exporte a lista de ganhadores em CSV na aba **Ganhadores**.
 

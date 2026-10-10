@@ -3,6 +3,7 @@ import type { ActiveEvent } from '../../../application/use-cases/events/ListActi
 import type { ImportParticipantsOutput } from '../../../application/use-cases/participants/ImportParticipants.ts';
 import type { PrizeAvailability } from '../../../application/use-cases/prizes/PrizeAvailability.ts';
 import type { ConfirmRegistrationOutput } from '../../../application/use-cases/registration/ConfirmRegistration.ts';
+import type { RegisterAndSpinOutput } from '../../../application/use-cases/registration/RegisterAndSpin.ts';
 import type { Event } from '../../../domain/entities/Event.ts';
 import type { RegistrationVerification } from '../../../domain/entities/RegistrationVerification.ts';
 import type { Participant } from '../../../domain/entities/Participant.ts';
@@ -86,11 +87,15 @@ export const presentPublicPrize = ({ prize, remainingUnits }: PrizeAvailability)
 });
 
 /** Contact data is not echoed back on the public endpoint. */
-export const presentRegistrationResult = ({ participant, spin }: ConfirmRegistrationOutput) => ({
+export const presentRegistrationResult = ({ participant }: ConfirmRegistrationOutput) => ({
   id: participant.id,
   name: participant.name,
-  // Interactive roulette: the prize was already drawn; the wheel on the phone lands on it.
-  spin: spin && {
+});
+
+/** Interactive roulette: the prize was already drawn; the wheel on the screen lands on it. */
+export const presentSpinResult = ({ participant, spin }: RegisterAndSpinOutput) => ({
+  ...presentRegistrationResult({ participant }),
+  spin: {
     drawId: spin.draw.id,
     prize: { id: spin.prize.id, name: spin.prize.name, imageUrl: prizeImageUrl(spin.prize) },
     wheel: spin.wheel.map(presentPublicPrize),

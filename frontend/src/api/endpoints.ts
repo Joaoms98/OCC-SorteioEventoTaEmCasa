@@ -15,6 +15,7 @@ import type {
   RaffleEvent,
   RegistrationResult,
   RegistrationVerification,
+  SpinResult,
 } from '../types/api';
 import { apiUrl, request } from './httpClient';
 
@@ -92,6 +93,9 @@ export const publicApi = {
       body: { code },
       authenticated: false,
     }),
+  /** Interactive roulette: registers and draws the prize in one step, with no e-mail code. */
+  registerAndSpin: (eventId: string, input: Required<ParticipantInput>) =>
+    request<SpinResult>(`/public/events/${eventId}/spins`, { method: 'POST', body: input, authenticated: false }),
   resendRegistrationCode: (eventId: string, verificationId: string) =>
     request<RegistrationVerification>(`/public/events/${eventId}/registrations/${verificationId}/resend`, {
       method: 'POST',

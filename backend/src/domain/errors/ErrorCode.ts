@@ -19,6 +19,8 @@ export const ErrorCode = {
   PrizesExhausted: 'PRIZES_EXHAUSTED',
   OrganizerDrawNotAllowed: 'ORGANIZER_DRAW_NOT_ALLOWED',
   ManualRegistrationNotAllowed: 'MANUAL_REGISTRATION_NOT_ALLOWED',
+  EmailCodeNotUsed: 'EMAIL_CODE_NOT_USED',
+  NotInteractiveRoulette: 'NOT_INTERACTIVE_ROULETTE',
   DrawModeLocked: 'DRAW_MODE_LOCKED',
   DrawAlreadyVoided: 'DRAW_ALREADY_VOIDED',
   DrawInProgress: 'DRAW_IN_PROGRESS',

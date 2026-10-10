@@ -147,28 +147,18 @@ describe.skipIf(!databaseUrl)('Prisma repositories on PostgreSQL', () => {
       phone: `119${String(20_000_000 + index)}`,
       email: `pessoa${index}@mail.com`,
     }));
-    const started = [];
-    for (const person of people) started.push(await useCases.startRegistration.execute({ eventId: event.id, ...person }));
 
-    const results = await Promise.allSettled(
-      started.map(({ verification }, index) =>
-        useCases.confirmRegistration.execute({
-          eventId: event.id,
-          verificationId: verification.id,
-          code: emails.lastCodeFor(people[index]!.email),
-        }),
-      ),
-    );
+    const results = await Promise.allSettled(people.map((person) => useCases.registerAndSpin.execute({ eventId: event.id, ...person })));
 
     const winners = results.flatMap((result) => (result.status === 'fulfilled' ? [result.value] : []));
     const refused = results.flatMap((result) => (result.status === 'rejected' ? [result.reason.code] : []));
     expect(winners).toHaveLength(3);
     expect(new Set(refused)).toEqual(new Set([ErrorCode.PrizesExhausted]));
-    expect(winners.map(({ spin }) => spin?.prize.name).sort()).toEqual(['Camiseta', 'Camiseta', 'Caneca']);
+    expect(winners.map(({ spin }) => spin.prize.name).sort()).toEqual(['Camiseta', 'Camiseta', 'Caneca']);
     // Nobody is registered without a prize, and nobody has two.
     expect(await database.prisma.participant.count({ where: { eventId: event.id } })).toBe(3);
     expect(await database.prisma.draw.count({ where: { eventId: event.id } })).toBe(3);
-    await expect(useCases.startRegistration.execute({ eventId: event.id, name: 'Tarde', phone: '11930000000', email: 't@mail.com' })).rejects.toMatchObject({
+    await expect(useCases.registerAndSpin.execute({ eventId: event.id, name: 'Tarde', phone: '11930000000', email: 't@mail.com' })).rejects.toMatchObject({
       code: ErrorCode.PrizesExhausted,
     });
     const listed = await useCases.listActiveEvents.execute();
@@ -268,13 +258,12 @@ describe.skipIf(!databaseUrl)('Prisma repositories on PostgreSQL', () => {
       }),
     ).rejects.toMatchObject({ code: ErrorCode.InvalidVerificationCode, details: { attemptsLeft: 4 } });
 
-    const { participant, spin } = await useCases.confirmRegistration.execute({
+    const { participant } = await useCases.confirmRegistration.execute({
       eventId: event.id,
       verificationId: verification.id,
       code: emails.lastCodeFor('ana@mail.com'),
     });
     expect(participant.email).toBe('ana@mail.com');
-    expect(spin).toBeNull();
     expect(await database.prisma.registrationVerification.count()).toBe(0);
     await expect(useCases.startRegistration.execute(data)).rejects.toMatchObject({
       code: ErrorCode.ParticipantAlreadyRegistered,

@@ -276,7 +276,9 @@ describe('HTTP API', () => {
     });
 
     const register = (name: string, digit: number) =>
-      registerWithCode(ctx.app, ctx.emails, eventId, { name, phone: `1198765430${digit}`, email: `${name.toLowerCase()}@mail.com` });
+      request(ctx.app)
+        .post(`/api/public/events/${eventId}/spins`)
+        .send({ name, phone: `1198765430${digit}`, email: `${name.toLowerCase()}@mail.com` });
 
     it('shows the prizes of the wheel to anyone, with nothing but name, photo and units left', async () => {
       const prizes = await request(ctx.app).get(`/api/public/events/${eventId}/prizes`).expect(200);
@@ -284,9 +286,10 @@ describe('HTTP API', () => {
       await request(ctx.app).get(`/api/public/events/${UNKNOWN_ID}/prizes`).expect(404);
     });
 
-    it('confirming the code returns the prize won and the wheel to spin; the next person finds no prize', async () => {
+    it('registering returns the prize won and the wheel to spin, with no e-mail code; the next person finds no prize', async () => {
       const ana = await register('Ana', 1);
       expect(ana.status).toBe(201);
+      expect(ctx.emails.sent).toHaveLength(0);
       expect(ana.body).toEqual({
         id: expect.any(String),
         name: 'Ana',
@@ -311,6 +314,33 @@ describe('HTTP API', () => {
         expect.objectContaining({ id: ana.body.spin.drawId, participant: expect.objectContaining({ name: 'Ana', phone: '11987654301' }) }),
       ]);
       await request(ctx.app).post(`/api/events/${eventId}/draws/${ana.body.spin.drawId}/claim`).set(auth).expect(200);
+    });
+
+    it('refuses the e-mail code on the roulette, the spin on other raffles and incomplete data, in Portuguese', async () => {
+      const data = { name: 'Ana', phone: '11987654301', email: 'ana@mail.com' };
+
+      const code = await request(ctx.app).post(`/api/public/events/${eventId}/registrations`).send(data).expect(422);
+      expect(code.body.error).toEqual({
+        code: 'EMAIL_CODE_NOT_USED',
+        message: 'A roleta interativa não usa código por e-mail. Atualize a página para participar.',
+      });
+
+      const classic = await request(ctx.app).post('/api/events').set(auth).send({ name: 'Sorteio comum', registrationOpen: true });
+      const spin = await request(ctx.app).post(`/api/public/events/${classic.body.id}/spins`).send(data).expect(422);
+      expect(spin.body.error).toEqual({
+        code: 'NOT_INTERACTIVE_ROULETTE',
+        message: 'Este sorteio não é uma roleta interativa: a inscrição é confirmada pelo código enviado por e-mail.',
+      });
+
+      const incomplete = await request(ctx.app).post(`/api/public/events/${eventId}/spins`).send({ name: 'Ana', phone: '', email: '' }).expect(400);
+      expect(incomplete.body.error.details).toEqual([
+        { field: 'phone', message: 'Informe o telefone com DDD.' },
+        { field: 'email', message: 'Informe seu e-mail.' },
+      ]);
+      await request(ctx.app).post(`/api/public/events/${UNKNOWN_ID}/spins`).send(data).expect(404);
+
+      const participants = await request(ctx.app).get(`/api/events/${eventId}/participants`).set(auth).expect(200);
+      expect(participants.body.items).toEqual([]);
     });
 
     it('the organizer cannot draw nor add people, and gets the reason in Portuguese', async () => {
@@ -396,7 +426,7 @@ describe('HTTP API', () => {
       ]);
 
       const confirmed = await request(ctx.app).post(confirmPath).send({ code }).expect(201);
-      expect(confirmed.body).toEqual({ id: expect.any(String), name: 'Ana Lima', spin: null });
+      expect(confirmed.body).toEqual({ id: expect.any(String), name: 'Ana Lima' });
       const listAfter = await request(ctx.app).get(`/api/events/${eventId}/participants`).set(auth);
       expect(listAfter.body.items).toEqual([expect.objectContaining({ phone: '11987654321', email: 'ana@mail.com' })]);
 

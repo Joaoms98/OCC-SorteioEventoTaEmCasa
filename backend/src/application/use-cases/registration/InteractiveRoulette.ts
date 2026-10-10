@@ -24,8 +24,8 @@ export interface InteractiveSpin extends PrizePick {
 
 /**
  * Interactive roulette: whoever registers spins once and always wins a prize. The prize is drawn
- * on the server when the registration is confirmed; the wheel on the phone only lands on it.
- * So an event takes as many participants as it has prize units.
+ * on the server at registration; the wheel on the screen only lands on it. So an event takes as
+ * many participants as it has prize units.
  */
 export class InteractiveRoulette {
   constructor(
@@ -34,13 +34,6 @@ export class InteractiveRoulette {
     private readonly random: RandomNumberGenerator,
     private readonly ids: IdGenerator,
   ) {}
-
-  /** Early answer for someone starting a registration (the binding check is the spin itself). */
-  async ensurePrizesLeft(eventId: string): Promise<void> {
-    if ((await availablePrizes(this.prizes, this.draws, eventId)).length === 0) {
-      throw new BusinessRuleError(ErrorCode.PrizesExhausted);
-    }
-  }
 
   /**
    * Draws the prize, or refuses when none is left. Must run inside the registration transaction,

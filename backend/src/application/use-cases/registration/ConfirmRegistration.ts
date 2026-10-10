@@ -10,7 +10,6 @@ import type { TransactionManager } from '../../ports/TransactionManager.ts';
 import type { VerificationCodeHasher } from '../../ports/VerificationCodeHasher.ts';
 import { ensureContactsAvailable } from '../participants/ensureContactsAvailable.ts';
 import { requireEvent } from '../shared/guards.ts';
-import type { InteractiveRoulette, InteractiveSpin } from './InteractiveRoulette.ts';
 
 export interface ConfirmRegistrationInput {
   eventId: string;
@@ -20,16 +19,11 @@ export interface ConfirmRegistrationInput {
 
 export interface ConfirmRegistrationOutput {
   participant: Participant;
-  /** Interactive roulette only: the prize this participant won and the wheel to spin. */
-  spin: InteractiveSpin | null;
 }
 
 type Outcome = ({ confirmed: true } & ConfirmRegistrationOutput) | { confirmed: false; attemptsLeft: number };
 
-/**
- * Public self-registration, step 2: the right code creates the participant (only once). On the
- * interactive roulette the same transaction draws their prize, so nobody registers without one.
- */
+/** Public self-registration, step 2: the right code creates the participant (only once). */
 export class ConfirmRegistration {
   constructor(
     private readonly transaction: TransactionManager,
@@ -39,18 +33,17 @@ export class ConfirmRegistration {
     private readonly hasher: VerificationCodeHasher,
     private readonly ids: IdGenerator,
     private readonly clock: Clock,
-    private readonly interactive: InteractiveRoulette,
   ) {}
 
   async execute(input: ConfirmRegistrationInput): Promise<ConfirmRegistrationOutput> {
     // A wrong code must still be counted, so the transaction returns the outcome instead of
     // throwing (which would roll the attempt counter back).
     const outcome = await this.transaction.run<Outcome>(async () => {
-      let event = await requireEvent(this.events, input.eventId);
-      // Spins are serialized per event, so two people never win the same last unit.
-      if (event.isInteractive) event = await requireEvent(this.events, input.eventId, { lock: true });
+      const event = await requireEvent(this.events, input.eventId);
       const verification = await this.verifications.findById(input.verificationId);
       if (!verification?.belongsTo(event.id)) throw new NotFoundError(ErrorCode.VerificationNotFound);
+      // A code sent before the event became an interactive roulette would register without a prize.
+      event.ensureRegistersByEmailCode();
       event.ensureRegistrationOpen();
 
       const now = this.clock.now();
@@ -71,15 +64,12 @@ export class ConfirmRegistration {
       });
       // Someone may have registered the same phone/e-mail since the code was sent.
       await ensureContactsAvailable(this.participants, participant);
-      // Interactive roulette: the prize comes first. Without one this throws and nobody is registered.
-      const pick = event.isInteractive ? await this.interactive.pick(event) : null;
       await this.participants.create(participant);
-      const spin = pick ? await this.interactive.award(pick, participant, now) : null;
       await this.verifications.delete(verification.id);
-      return { confirmed: true, participant, spin };
+      return { confirmed: true, participant };
     });
 
-    if (outcome.confirmed) return { participant: outcome.participant, spin: outcome.spin };
+    if (outcome.confirmed) return { participant: outcome.participant };
     if (outcome.attemptsLeft === 0) throw new BusinessRuleError(ErrorCode.TooManyVerificationAttempts);
     throw new InvalidInputError(ErrorCode.InvalidVerificationCode, { attemptsLeft: outcome.attemptsLeft });
   }

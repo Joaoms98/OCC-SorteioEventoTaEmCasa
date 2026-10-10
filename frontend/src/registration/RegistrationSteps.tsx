@@ -1,16 +1,40 @@
 import { Gift, MailCheck } from 'lucide-react';
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { ApiError, errorMessage } from '../api/ApiError';
 import { publicApi } from '../api/endpoints';
 import { assetUrl } from '../api/httpClient';
 import { Alert } from '../components/Alert';
 import { TextField } from '../components/Field';
-import type { PublicEvent, PublicPrize, RegistrationResult, RegistrationVerification } from '../types/api';
-import { maskPhone } from '../utils/format';
+import { ParallaxBackground } from '../live/ParallaxBackground';
+import type { ParticipantInput, PublicEvent, PublicPrize, RegistrationResult, RegistrationVerification } from '../types/api';
+import { formatDateTime, maskPhone } from '../utils/format';
 
 /** Registration waiting for the code sent by e-mail. */
 export interface PendingRegistration extends RegistrationVerification {
   name: string;
+}
+
+/** The card every registration screen sits on, over the moving brand pattern. */
+export function RegistrationCard({ wide = false, children }: { wide?: boolean; children: ReactNode }) {
+  return (
+    <div className="centered-page public-page">
+      <ParallaxBackground image="/brand/stage-pattern.webp" />
+      <div className={wide ? 'card auth-card auth-card-wide' : 'card auth-card'}>
+        <img src="/brand/occ-round.webp" alt="Os Crema Culture" width={112} height={112} className="auth-logo" />
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function EventIntro({ event }: { event: PublicEvent }) {
+  return (
+    <>
+      <h1>{event.name}</h1>
+      {event.eventDate && <p className="muted">{formatDateTime(event.eventDate)}</p>}
+      {event.description && <p className="user-text public-description">{event.description}</p>}
+    </>
+  );
 }
 
 /** Interactive roulette: what is on the wheel, before asking for any data. */
@@ -34,18 +58,25 @@ export function PrizePitch({ prizes }: { prizes: PublicPrize[] }) {
   );
 }
 
-/** Step 1: name, phone and e-mail; the server answers by e-mailing a code. */
+export type RegistrationData = Required<ParticipantInput>;
+
+/** The registration form: name, phone and e-mail. What happens next is up to `onSubmit`. */
 export function DataStep({
-  eventId,
-  interactive,
+  title,
+  submitLabel,
+  submittingLabel,
+  emailHint,
   sharedDevice = false,
-  onCodeSent,
+  onSubmit,
 }: {
-  eventId: string;
-  interactive: boolean;
-  /** Booth tablet used by one person after another: the browser must not offer what earlier people typed. */
+  title: string;
+  submitLabel: string;
+  submittingLabel: string;
+  emailHint?: string;
+  /** Screen used by one person after another (booth tablet): the browser must not offer what earlier people typed. */
   sharedDevice?: boolean;
-  onCodeSent(pending: PendingRegistration): void;
+  /** Sends the data; a refusal is shown on the form and on its fields. */
+  onSubmit(data: RegistrationData): Promise<void>;
 }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -60,8 +91,7 @@ export function DataStep({
     setSubmitting(true);
     setError(null);
     try {
-      const verification = await publicApi.startRegistration(eventId, { name, phone, email });
-      onCodeSent({ ...verification, name: name.trim() });
+      await onSubmit({ name, phone, email });
     } catch (caught) {
       setError(caught);
       setSubmitting(false);
@@ -70,7 +100,7 @@ export function DataStep({
 
   return (
     <form className="stack" noValidate autoComplete={sharedDevice ? 'off' : undefined} onSubmit={handleSubmit}>
-      <h2 className="form-title">{interactive ? 'Inscreva-se para girar a roleta' : 'Participe do sorteio de brindes'}</h2>
+      <h2 className="form-title">{title}</h2>
       {error ? <Alert>{errorMessage(error)}</Alert> : null}
       <TextField
         label="Nome completo"
@@ -98,10 +128,10 @@ export function DataStep({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         error={fieldErrors.email}
-        hint="Vamos enviar um código para confirmar sua inscrição."
+        hint={emailHint}
       />
       <button type="submit" className="btn btn-primary btn-block btn-lg" disabled={submitting}>
-        {submitting ? 'Enviando código…' : 'Receber código por e-mail'}
+        {submitting ? submittingLabel : submitLabel}
       </button>
       <p className="muted small">
         Cada pessoa pode se inscrever uma vez. Seus dados serão usados apenas para este sorteio e para contato com os
@@ -113,19 +143,16 @@ export function DataStep({
 
 const secondsUntil = (iso: string): number => Math.max(Math.ceil((new Date(iso).getTime() - Date.now()) / 1000), 0);
 
-/** Step 2: the 6-digit code from the e-mail. */
+/** Raffles drawn by the organizer, after the form: the 6-digit code from the e-mail. */
 export function CodeStep({
   event,
   pending,
-  sharedDevice = false,
   onRenewed,
   onConfirmed,
   onRestart,
 }: {
   event: PublicEvent;
   pending: PendingRegistration;
-  /** Booth tablet: whoever finds this step abandoned needs an obvious way back to the form. */
-  sharedDevice?: boolean;
   onRenewed(pending: PendingRegistration): void;
   onConfirmed(result: RegistrationResult): void;
   onRestart(): void;
@@ -218,7 +245,7 @@ export function CodeStep({
           id="verification-code"
           className="code-input"
           inputMode="numeric"
-          autoComplete={sharedDevice ? 'off' : 'one-time-code'}
+          autoComplete="one-time-code"
           maxLength={6}
           placeholder="000000"
           value={code}
@@ -240,7 +267,7 @@ export function CodeStep({
           {resending ? 'Reenviando…' : resendIn > 0 ? `Reenviar código em ${resendIn}s` : 'Reenviar código'}
         </button>
         <button type="button" className="btn btn-ghost btn-sm" onClick={onRestart}>
-          {sharedDevice ? 'Começar de novo' : 'Corrigir meus dados'}
+          Corrigir meus dados
         </button>
       </div>
     </form>

@@ -1,17 +1,15 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router';
+import { Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { RequireAuth } from './auth/RequireAuth';
 import { Layout } from './components/Layout';
 import { DrawStagePage } from './pages/DrawStagePage';
 import { EventDetailPage } from './pages/event-detail/EventDetailPage';
 import { EventsPage } from './pages/EventsPage';
 import { HomePage } from './pages/HomePage';
-import { KioskPage } from './pages/KioskPage';
 import { LivePage } from './pages/LivePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { PublicRegistrationPage } from './pages/PublicRegistrationPage';
-import { SpinPage } from './pages/SpinPage';
-import { adminPaths } from './routes';
+import { adminPaths, publicPaths } from './routes';
 
 export function App() {
   return (
@@ -19,8 +17,6 @@ export function App() {
       <Route path="/" element={<HomePage />} />
       <Route path="/register/:eventId" element={<PublicRegistrationPage />} />
       <Route path="/live/:eventId" element={<LivePage />} />
-      <Route path="/spin/:eventId" element={<SpinPage />} />
-      <Route path="/kiosk/:eventId" element={<KioskPage />} />
 
       {/* Organizer area: only reachable by typing /admin (the public pages do not link to it). */}
       <Route path="/admin/login" element={<LoginPage />} />
@@ -47,9 +43,17 @@ export function App() {
       {/* Addresses from before the organizer area moved to /admin. */}
       <Route path="/login" element={<Navigate to={adminPaths.login} replace />} />
       <Route path="/events/*" element={<LegacyAdminRedirect />} />
+      {/* The interactive roulette used to have its own pages; it now lives on the registration page. */}
+      <Route path="/spin/:eventId" element={<RegistrationRedirect />} />
+      <Route path="/kiosk/:eventId" element={<RegistrationRedirect />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
+}
+
+function RegistrationRedirect() {
+  const { eventId = '' } = useParams();
+  return <Navigate to={publicPaths.register(eventId)} replace />;
 }
 
 /** /events -> /admin and /events/<id>[/draw] -> /admin/events/<id>[/draw], keeping the query string. */

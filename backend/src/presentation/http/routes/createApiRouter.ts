@@ -59,6 +59,7 @@ export function createApiRouter(
     publicEvents.confirmRegistration,
   );
   router.post('/public/events/:eventId/registrations/:verificationId/resend', registrationLimiter, publicEvents.resendCode);
+  router.post('/public/events/:eventId/spins', registrationLimiter, publicEvents.registerAndSpin);
   router.get('/public/events/:eventId/live', createLiveStreamRateLimiter(rateLimits), liveStream.stream);
   router.get('/public/prizes/:prizeId/image', prizes.showImage);
 

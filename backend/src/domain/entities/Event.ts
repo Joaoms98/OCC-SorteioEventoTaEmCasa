@@ -116,6 +116,16 @@ export class Event {
     if (this.isInteractive) throw new BusinessRuleError(ErrorCode.ManualRegistrationNotAllowed);
   }
 
+  /** On the interactive roulette registering is spinning: one step, with no e-mail code. */
+  ensureRegistersByEmailCode(): void {
+    if (this.isInteractive) throw new BusinessRuleError(ErrorCode.EmailCodeNotUsed);
+  }
+
+  /** Only the interactive roulette gives a prize for registering. */
+  ensureSpinsOnRegistration(): void {
+    if (!this.isInteractive) throw new BusinessRuleError(ErrorCode.NotInteractiveRoulette);
+  }
+
   ensureRegistrationOpen(): void {
     if (!this.props.registrationOpen) {
       throw new BusinessRuleError(ErrorCode.RegistrationClosed);

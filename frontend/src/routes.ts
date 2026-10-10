@@ -8,10 +8,7 @@ export const adminPaths = {
 
 export const publicPaths = {
   home: '/',
+  /** Registration; on the interactive roulette the participant also spins the wheel here. */
   register: (eventId: string) => `/register/${eventId}`,
   live: (eventId: string) => `/live/${eventId}`,
-  /** Interactive roulette: where a registered participant spins and sees the prize. */
-  spin: (eventId: string) => `/spin/${eventId}`,
-  /** Booth mode: a shared tablet where people register (and spin) one after another. */
-  kiosk: (eventId: string) => `/kiosk/${eventId}`,
 };
