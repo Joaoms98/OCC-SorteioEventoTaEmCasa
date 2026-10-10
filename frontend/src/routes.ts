@@ -12,4 +12,6 @@ export const publicPaths = {
   live: (eventId: string) => `/live/${eventId}`,
   /** Interactive roulette: where a registered participant spins and sees the prize. */
   spin: (eventId: string) => `/spin/${eventId}`,
+  /** Booth mode: a shared tablet where people register (and spin) one after another. */
+  kiosk: (eventId: string) => `/kiosk/${eventId}`,
 };

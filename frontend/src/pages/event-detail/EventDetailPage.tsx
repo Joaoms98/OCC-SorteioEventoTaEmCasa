@@ -114,7 +114,7 @@ export function EventDetailPage() {
           <span>{event.registrationOpen ? 'Inscrições públicas abertas' : 'Inscrições públicas fechadas'}</span>
         </label>
       </div>
-      <PublicLinksCard eventId={event.id} registrationOpen={event.registrationOpen} />
+      <PublicLinksCard eventId={event.id} registrationOpen={event.registrationOpen} drawMode={event.drawMode} />
 
       <nav className="tabs" role="tablist">
         {TABS.map((item) => (

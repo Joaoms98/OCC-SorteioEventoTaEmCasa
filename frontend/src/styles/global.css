@@ -1021,6 +1021,26 @@ tbody tr:last-child td {
   color: var(--color-brand);
 }
 
+/* Booth mode (shared tablet): after each result, the way on to the next person. */
+.kiosk-next {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.kiosk-next p {
+  margin: 0;
+}
+
+/* A tablet is read and tapped at arm's length: the form gets more room than on a phone. */
+@media (min-width: 700px) {
+  .kiosk-card {
+    max-width: 560px;
+    padding: 2.25rem;
+  }
+}
+
 /* ---------- Public home page: active raffles over the brand pattern ---------- */
 
 .home {

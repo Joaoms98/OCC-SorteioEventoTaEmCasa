@@ -23,6 +23,7 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
   - **Roleta de brindes:** a roleta mostra os brindes e para no brinde sorteado, enquanto os nomes dos participantes passam até revelar quem ganhou
   - **Roleta de participantes:** a organização escolhe o brinde da rodada e a roleta gira com os nomes de quem está concorrendo, parando no ganhador (ideal para evento com um brinde só)
   - **Roleta interativa:** cada pessoa se inscreve e gira a roleta de brindes no próprio celular ou computador, arrastando com o dedo ou o mouse; todo inscrito ganha um brinde enquanto houver
+- **Modo estande** (`/kiosk/<id-do-evento>`): a roleta interativa num tablet compartilhado, com uma pessoa depois da outra; nada fica guardado no aparelho e a tela volta sozinha para a próxima pessoa
 - **Telão de sorteio** para projetor: animação, confete, atalho de teclado (Enter/Espaço) e tela cheia, sobre a estampa da OCC com efeito parallax (acompanha o mouse e a rolagem)
 - **Sorteio ao vivo** em `/live/<id-do-evento>`: qualquer pessoa com o link (ou QR Code) acompanha cada sorteio em tempo real pelo celular, junto com o telão, e vê quantas pessoas estão assistindo
 - **Prêmio desbloqueado / Resgatar brinde:** ao revelar o ganhador, o palco mostra o cartão do prêmio; quando a pessoa retira o brinde, a organização clica em **Resgatar** e uma comemoração (moeda OCC girando, explosão de luz) aparece no telão e em todos os celulares
@@ -39,6 +40,7 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
   - O evento aceita tantas inscrições quantas unidades de brinde tiver: quando os brindes acabam, ninguém mais se inscreve (nem recebe o código por e-mail). Um giro anulado devolve a unidade à roleta.
   - A organização não sorteia nem inscreve ninguém à mão nesse tipo; ela entrega os brindes pela aba **Ganhadores**.
   - O brinde fica guardado no aparelho em que a pessoa se inscreveu: reabrindo a página ela vê o resultado, sem girar de novo. Em outro aparelho o resultado não aparece, mas continua registrado para a organização.
+  - No **modo estande** (tablet compartilhado) nada fica guardado no aparelho: depois do resultado, o botão **Próxima pessoa** (ou 45 segundos sem ninguém tocar) devolve a tela ao formulário vazio. Uma tela largada pela metade também volta sozinha: formulário e roleta depois de 2 minutos sem toque, código do e-mail depois de 5. O brinde de quem não chegou a girar continua registrado na aba **Ganhadores**.
 - O tipo de roleta é definido no cadastro do evento. Trocar entre a roleta de brindes e a de participantes é livre; entrar ou sair da roleta interativa só enquanto o evento não tem participantes.
 - Cada unidade de um brinde é sorteada separadamente.
 - **Uma pessoa ganha no máximo uma vez por evento.** Se o sorteio dela for anulado (ausência), ela não volta a concorrer.
@@ -61,6 +63,7 @@ Sistema de sorteio de brindes para os eventos da **Os Crema Culture (OCC)**, cri
 | `/register/<id-do-evento>`       | Público      | Inscrição no sorteio (código por e-mail)                   |
 | `/live/<id-do-evento>`           | Público      | Sorteio ao vivo                                            |
 | `/spin/<id-do-evento>`           | Público      | Roleta interativa de quem acabou de se inscrever (e o brinde ganho) |
+| `/kiosk/<id-do-evento>`          | Público      | Modo estande: inscrição e roleta num tablet compartilhado, uma pessoa depois da outra |
 | `/admin`                         | Organização  | Eventos (pede a senha em `/admin/login`)                   |
 | `/admin/events/<id-do-evento>`   | Organização  | Participantes, brindes, ganhadores e links públicos        |
 | `/admin/events/<id-do-evento>/draw` | Organização | Telão de sorteio                                        |
@@ -306,6 +309,7 @@ Sem Blueprint, crie um **Web Service** Node com os mesmos comandos de build/star
 - O limite de requisições é contado por visitante (IP). Quem está no mesmo Wi-Fi compartilha um IP: são até 300 chamadas de inscrição a cada 15 minutos por rede, o que dá cerca de 150 inscrições nesse intervalo. Se muita gente for se inscrever ao mesmo tempo no local, abra as inscrições com antecedência.
 - Abra as inscrições, projete o QR Code da página do evento e feche as inscrições antes de começar os sorteios.
 - Divulgue o link **Sorteio ao vivo** (QR Code na página do evento ou no botão **Transmissão** do telão) para quem quiser acompanhar pelo celular.
+- **Roleta interativa no estande:** abra no tablet o link **Modo estande (tablet)** da página do evento, e não o de inscrição pelo celular. Cada pessoa digita os dados no tablet, lê no próprio celular o código que chega por e-mail e gira a roleta; depois é só tocar em **Próxima pessoa**. A página pede ao tablet para não apagar a tela; se ele apagar mesmo assim, aumente o tempo de tela nas configurações do aparelho. O plano gratuito do Brevo envia 300 e-mails por dia, então são no máximo 300 inscrições por dia.
 - No telão, use **Tela cheia** e gire a roleta com **Enter** ou **Espaço**. Se o ganhador não aparecer, use **Ganhador ausente — anular** e sorteie novamente.
 - Ao final, exporte a lista de ganhadores em CSV na aba **Ganhadores**.
 

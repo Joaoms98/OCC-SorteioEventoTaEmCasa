@@ -2,6 +2,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Check, Copy } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { publicPaths } from '../../routes';
+import type { DrawMode } from '../../types/api';
 
 interface PublicLink {
   title: string;
@@ -9,8 +10,17 @@ interface PublicLink {
   url: string;
 }
 
-/** Links participants use from their phones: self-registration and the live draw. */
-export function PublicLinksCard({ eventId, registrationOpen }: { eventId: string; registrationOpen: boolean }) {
+interface PublicLinksCardProps {
+  eventId: string;
+  registrationOpen: boolean;
+  drawMode: DrawMode;
+}
+
+/**
+ * Links participants use from their phones: self-registration and the live draw. The interactive
+ * roulette also gets the booth link, for a shared tablet.
+ */
+export function PublicLinksCard({ eventId, registrationOpen, drawMode }: PublicLinksCardProps) {
   const origin = window.location.origin;
   const links: PublicLink[] = [
     {
@@ -26,6 +36,14 @@ export function PublicLinksCard({ eventId, registrationOpen }: { eventId: string
       url: `${origin}${publicPaths.live(eventId)}`,
     },
   ];
+  if (drawMode === 'INTERACTIVE') {
+    links.push({
+      title: 'Modo estande (tablet)',
+      description:
+        'Abra no tablet do estande: cada pessoa se inscreve, gira a roleta e a tela volta sozinha para a próxima, sem guardar nada no aparelho.',
+      url: `${origin}${publicPaths.kiosk(eventId)}`,
+    });
+  }
 
   return (
     <div className="public-links">
