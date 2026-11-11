@@ -1,0 +1,407 @@
+/*
+ * "Guarda ou Rola": prototype of a die-based draw, in the OCC skin (cream face, brown pips,
+ * orange accent). The cube is plain CSS 3D — six faces placed on the sides of a box, and
+ * `data-face` turns the landed face towards the viewer.
+ */
+
+.dice-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 2.5rem 1rem 1.5rem;
+  color: var(--color-cream);
+}
+
+.dice-hero {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  max-width: 44rem;
+  text-align: center;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 60%);
+}
+
+.dice-hero h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.dice-hero p {
+  color: #e9c9a0;
+  font-weight: 600;
+}
+
+.dice-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.dice-note {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.dice-main {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 1080px;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  grid-template-areas:
+    'scores tray'
+    'controls tray'
+    'keys tray'
+    'log log';
+  align-items: start;
+}
+
+/* Cards sit on the dark public page, so they restate the dark-on-light text. */
+.dice-scores,
+.dice-log {
+  color: var(--color-text);
+}
+
+.dice-scores {
+  grid-area: scores;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.dice-score-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dice-score-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+/* The side playing gets an orange bullet, so the turn is readable without colour alone. */
+.dice-score.is-turn .dice-score-name::before {
+  content: '';
+  width: 0.7rem;
+  height: 0.7rem;
+  background: var(--color-brand);
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.dice-score-value {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(2.4rem, 8vw, 3.6rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+.dice-track {
+  height: 10px;
+  margin-top: 0.4rem;
+  background: var(--color-surface-alt);
+  border: var(--outline);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.dice-fill {
+  height: 100%;
+  width: 0;
+  background: var(--color-brand);
+  transition: width 0.5s cubic-bezier(0.3, 0.8, 0.3, 1);
+}
+
+.dice-tray {
+  --dice-size: clamp(88px, 22vw, 124px);
+
+  grid-area: tray;
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: clamp(340px, 50vw, 460px);
+  padding: 1.25rem;
+  overflow: hidden;
+  background: #241b12;
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.dice-bank {
+  position: absolute;
+  top: 0.9rem;
+  left: 1.1rem;
+  z-index: 2;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.dice-bank strong {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(2.2rem, 7vw, 3rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--color-brand-lighter);
+}
+
+.dice-bank span {
+  color: #e9c9a0;
+  font-size: 0.85rem;
+}
+
+.dice-status {
+  position: absolute;
+  right: 1.1rem;
+  bottom: 0.9rem;
+  left: 1.1rem;
+  z-index: 2;
+  font-weight: 600;
+}
+
+/* ---------- The die ---------- */
+
+.dice-toss {
+  position: relative;
+  z-index: 1;
+  width: var(--dice-size);
+  height: var(--dice-size);
+  perspective: 700px;
+  transform: translate(var(--dice-dx, 0px), var(--dice-dy, 0px)) rotate(var(--dice-rz, 0deg));
+  filter: drop-shadow(0 16px 12px rgb(0 0 0 / 55%));
+}
+
+.dice-toss.is-rolling {
+  animation: dice-toss 1.1s cubic-bezier(0.22, 0.7, 0.3, 1) both;
+}
+
+@keyframes dice-toss {
+  0% {
+    transform: translate(calc(var(--dice-dx) * -1.6), -200px) rotate(var(--dice-rz)) scale(1.5);
+    opacity: 0;
+  }
+
+  15% {
+    opacity: 1;
+  }
+
+  55% {
+    transform: translate(calc(var(--dice-dx) * 0.5), calc(var(--dice-dy) - 40px)) rotate(var(--dice-rz)) scale(1.12);
+  }
+
+  72% {
+    transform: translate(var(--dice-dx), var(--dice-dy)) rotate(var(--dice-rz)) scale(1);
+  }
+
+  86% {
+    transform: translate(var(--dice-dx), calc(var(--dice-dy) - 14px)) rotate(var(--dice-rz)) scale(1.03);
+  }
+
+  100% {
+    transform: translate(var(--dice-dx), var(--dice-dy)) rotate(var(--dice-rz)) scale(1);
+  }
+}
+
+.dice-cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(-14deg) rotateY(-7deg) rotateX(var(--dice-fx, 0deg)) rotateY(var(--dice-fy, 0deg));
+}
+
+.is-rolling .dice-cube {
+  animation: dice-spin 1.1s cubic-bezier(0.2, 0.7, 0.25, 1) both;
+}
+
+@keyframes dice-spin {
+  from {
+    transform: rotateX(calc(-14deg + var(--dice-tx) * 360deg)) rotateY(calc(-7deg + var(--dice-ty) * 360deg))
+      rotateX(var(--dice-fx)) rotateY(var(--dice-fy));
+  }
+}
+
+/* Turning the landed face to the viewer: the inverse of where that face was placed. */
+.dice-cube[data-face='1'] {
+  --dice-fx: 0deg;
+  --dice-fy: 0deg;
+}
+
+.dice-cube[data-face='2'] {
+  --dice-fx: -90deg;
+  --dice-fy: 0deg;
+}
+
+.dice-cube[data-face='3'] {
+  --dice-fx: 0deg;
+  --dice-fy: -90deg;
+}
+
+.dice-cube[data-face='4'] {
+  --dice-fx: 0deg;
+  --dice-fy: 90deg;
+}
+
+.dice-cube[data-face='5'] {
+  --dice-fx: 90deg;
+  --dice-fy: 0deg;
+}
+
+.dice-cube[data-face='6'] {
+  --dice-fx: 0deg;
+  --dice-fy: 180deg;
+}
+
+.dice-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  padding: 15%;
+  background: linear-gradient(145deg, var(--color-surface), var(--color-surface-alt));
+  border: 2px solid var(--color-border);
+  border-radius: 16%;
+}
+
+.dice-face-1 {
+  transform: translateZ(calc(var(--dice-size) / 2));
+}
+
+.dice-face-6 {
+  transform: rotateY(180deg) translateZ(calc(var(--dice-size) / 2));
+}
+
+.dice-face-3 {
+  transform: rotateY(90deg) translateZ(calc(var(--dice-size) / 2));
+}
+
+.dice-face-4 {
+  transform: rotateY(-90deg) translateZ(calc(var(--dice-size) / 2));
+}
+
+.dice-face-2 {
+  transform: rotateX(90deg) translateZ(calc(var(--dice-size) / 2));
+}
+
+.dice-face-5 {
+  transform: rotateX(-90deg) translateZ(calc(var(--dice-size) / 2));
+}
+
+.dice-pip {
+  width: 74%;
+  aspect-ratio: 1;
+  place-self: center;
+  background: var(--color-brown);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.dice-pip[data-on] {
+  opacity: 1;
+}
+
+/* The single pip of face 1 is the OCC orange, like the dot on the box logo. */
+.dice-face-1 .dice-pip[data-on] {
+  width: 100%;
+  background: var(--color-brand);
+}
+
+.dice-result {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1.5rem;
+  text-align: center;
+  background: rgb(36 27 18 / 94%);
+}
+
+.dice-result h2 {
+  margin: 0;
+  font-size: clamp(2rem, 7vw, 3rem);
+}
+
+.dice-result p {
+  color: #e9c9a0;
+}
+
+.dice-controls {
+  grid-area: controls;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.dice-keys {
+  grid-area: keys;
+  margin: 0;
+  color: #e9c9a0;
+}
+
+.dice-log {
+  grid-area: log;
+}
+
+.dice-log ul {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+  list-style: none;
+}
+
+.dice-log li {
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.dice-log li:first-child {
+  font-weight: 700;
+}
+
+.dice-log li:last-child {
+  border-bottom: 0;
+}
+
+.dice-footer {
+  display: grid;
+  justify-items: center;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+@media (width <= 760px) {
+  .dice-main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'tray'
+      'controls'
+      'keys'
+      'scores'
+      'log';
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-toss.is-rolling,
+  .is-rolling .dice-cube {
+    animation: none;
+  }
+
+  .dice-fill {
+    transition: none;
+  }
+}

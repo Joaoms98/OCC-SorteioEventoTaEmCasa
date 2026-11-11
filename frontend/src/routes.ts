@@ -11,4 +11,6 @@ export const publicPaths = {
   /** Registration; on the interactive roulette the participant also spins the wheel here. */
   register: (eventId: string) => `/register/${eventId}`,
   live: (eventId: string) => `/live/${eventId}`,
+  /** Prototype of a draw type the crew is voting on; wired to nothing. */
+  diceIdea: '/ideas/dice',
 };

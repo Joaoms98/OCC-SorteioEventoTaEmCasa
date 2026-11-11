@@ -1,4 +1,4 @@
-import { CalendarDays, CircleCheck, Gift, Hand, Radio, Ticket } from 'lucide-react';
+import { CalendarDays, CircleCheck, Gift, Hand, Lightbulb, Radio, Ticket } from 'lucide-react';
 import { useEffect } from 'react';
 import { Link } from 'react-router';
 import { errorMessage } from '../api/ApiError';
@@ -61,6 +61,10 @@ export function HomePage() {
           </ul>
         )}
       </main>
+
+      <Link to={publicPaths.diceIdea} className="btn btn-secondary">
+        <Lightbulb size={18} aria-hidden="true" /> Ideia nova: sorteio no dado
+      </Link>
 
       <footer className="home-footer">Os Crema Culture · conectando pessoas, cultura e liberdade</footer>
     </div>
