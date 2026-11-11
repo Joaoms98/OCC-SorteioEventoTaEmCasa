@@ -11,9 +11,6 @@
   gap: 1.5rem;
   min-height: 100vh;
   padding: 2.5rem 1rem 1.5rem;
-  background:
-    radial-gradient(circle at 50% 38%, #3a2a1b 0%, #20160e 42%, #130d08 100%),
-    var(--color-brown);
   color: var(--color-cream);
 }
 
@@ -23,6 +20,7 @@
   gap: 0.6rem;
   max-width: 44rem;
   text-align: center;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 60%);
 }
 
 .revolver-hero h1 {
@@ -65,8 +63,11 @@
   align-items: center;
   width: 100%;
   min-height: clamp(300px, 54vw, 420px);
-  /* The muzzle sits in a dark mouth, so the smoke has somewhere to rise into. */
-  background: radial-gradient(circle at 50% 58%, rgb(0 0 0 / 55%) 0%, rgb(0 0 0 / 25%) 45%, transparent 72%);
+  /*
+   * The muzzle sits in a dark mouth: over the OCC pattern the smoke would have nothing to read
+   * against, so the stage dims the pattern right where the smoke rises.
+   */
+  background: radial-gradient(ellipse 64% 72% at 50% 44%, rgb(14 9 5 / 90%) 0%, rgb(14 9 5 / 68%) 42%, rgb(14 9 5 / 30%) 66%, transparent 82%);
 }
 
 .revolver-rig {
@@ -82,10 +83,9 @@
   filter: drop-shadow(0 18px 20px rgb(0 0 0 / 65%));
 }
 
-/* The cylinder turns one chamber per pull. */
+/* The cylinder turns one chamber per pull; its centre comes from the drawing itself. */
 .revolver-chambers {
   transform-box: view-box;
-  transform-origin: 110px 104px;
   transition: transform 0.42s cubic-bezier(0.25, 0.9, 0.3, 1);
 }
 
@@ -229,7 +229,7 @@
   font-size: clamp(1.6rem, 6vw, 2.4rem);
   line-height: 1.05;
   color: var(--color-brand-lighter);
-  text-shadow: 0 2px 16px rgb(0 0 0 / 70%);
+  text-shadow: 0 2px 16px rgb(0 0 0 / 80%);
 }
 
 @keyframes revolver-prize {

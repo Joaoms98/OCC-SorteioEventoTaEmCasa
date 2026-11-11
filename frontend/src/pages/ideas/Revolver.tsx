@@ -13,7 +13,10 @@ export const BORE = { x: 110, y: 96, r: 28 };
 
 export function Revolver({ spent, position }: { spent: readonly number[]; position: number }) {
   // The cylinder turns so the chamber about to fire hides behind the barrel, at the top.
-  const turn = { transform: `rotate(${-position * (360 / CHAMBERS)}deg)` };
+  const turn = {
+    transform: `rotate(${-position * (360 / CHAMBERS)}deg)`,
+    transformOrigin: `${CYLINDER.x}px ${CYLINDER.y}px`,
+  };
 
   return (
     <svg className="revolver-art" viewBox="0 0 220 252" role="img" aria-label="Revólver apontado para você">

@@ -1,5 +1,6 @@
 import { Crosshair, Lightbulb, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { ParallaxBackground } from '../../live/ParallaxBackground';
 import { IdeaNav } from './IdeaNav';
 import { Revolver } from './Revolver';
 import { mockPrize } from './ideas';
@@ -153,6 +154,8 @@ export function RevolverPage() {
 
   return (
     <div className="revolver-page public-page">
+      <ParallaxBackground image="/brand/stage-pattern.webp" />
+
       <header className="revolver-hero">
         <span className="badge badge-muted revolver-tag">
           <Lightbulb size={16} aria-hidden="true" /> Ideia em votação
