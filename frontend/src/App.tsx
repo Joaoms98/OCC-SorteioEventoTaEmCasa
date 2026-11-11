@@ -7,6 +7,7 @@ import { EventsPage } from './pages/EventsPage';
 import { HomePage } from './pages/HomePage';
 import { DicePage } from './pages/ideas/DicePage';
 import { CardsPage } from './pages/ideas/CardsPage';
+import { RevolverPage } from './pages/ideas/RevolverPage';
 import { ScratchPage } from './pages/ideas/ScratchPage';
 import { LivePage } from './pages/LivePage';
 import { LoginPage } from './pages/LoginPage';
@@ -23,6 +24,7 @@ export function App() {
       <Route path={publicPaths.diceIdea} element={<DicePage />} />
       <Route path={publicPaths.scratchIdea} element={<ScratchPage />} />
       <Route path={publicPaths.cardsIdea} element={<CardsPage />} />
+      <Route path={publicPaths.revolverIdea} element={<RevolverPage />} />
 
       {/* Organizer area: only reachable by typing /admin (the public pages do not link to it). */}
       <Route path="/admin/login" element={<LoginPage />} />

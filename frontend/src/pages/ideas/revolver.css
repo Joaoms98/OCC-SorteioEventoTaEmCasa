@@ -1,0 +1,309 @@
+/*
+ * Russian-roulette prototype. This page breaks from the sunny look of the other ideas on purpose:
+ * a dark stage and cold steel for the tension, the OCC orange kept for the one moment that pays
+ * off — the shot. The smoke is the point, so nothing patterned competes with it behind the barrel.
+ */
+
+.revolver-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 2.5rem 1rem 1.5rem;
+  background:
+    radial-gradient(circle at 50% 38%, #3a2a1b 0%, #20160e 42%, #130d08 100%),
+    var(--color-brown);
+  color: var(--color-cream);
+}
+
+.revolver-hero {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  max-width: 44rem;
+  text-align: center;
+}
+
+.revolver-hero h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.revolver-hero p {
+  color: #e9c9a0;
+  font-weight: 600;
+}
+
+.revolver-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.revolver-note {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.revolver-main {
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ---------- The stage ---------- */
+
+.revolver-stage {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  justify-items: center;
+  align-items: center;
+  width: 100%;
+  min-height: clamp(300px, 54vw, 420px);
+  /* The muzzle sits in a dark mouth, so the smoke has somewhere to rise into. */
+  background: radial-gradient(circle at 50% 58%, rgb(0 0 0 / 55%) 0%, rgb(0 0 0 / 25%) 45%, transparent 72%);
+}
+
+.revolver-rig {
+  position: relative;
+  width: clamp(210px, 46vw, 300px);
+  will-change: transform;
+}
+
+.revolver-art {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 18px 20px rgb(0 0 0 / 65%));
+}
+
+/* The cylinder turns one chamber per pull. */
+.revolver-chambers {
+  transform-box: view-box;
+  transform-origin: 110px 104px;
+  transition: transform 0.42s cubic-bezier(0.25, 0.9, 0.3, 1);
+}
+
+/* ---------- Muzzle: flash and smoke ---------- */
+
+.revolver-muzzle {
+  position: absolute;
+  /* Over the bore: 110/220 across, 96/252 down in the drawing. */
+  top: 38%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.revolver-flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 170px;
+  height: 170px;
+  margin: -85px 0 0 -85px;
+  background: radial-gradient(
+    circle,
+    #fff 0%,
+    #ffe3a8 28%,
+    rgb(232 97 31 / 75%) 48%,
+    rgb(232 97 31 / 20%) 62%,
+    transparent 72%
+  );
+  animation: revolver-flash 0.18s ease-out both;
+}
+
+@keyframes revolver-flash {
+  from {
+    transform: scale(0.35);
+    opacity: 1;
+  }
+
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Powder hanging at the muzzle right after the shot: dense and low, never a glow. */
+.revolver-haze {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 108px;
+  height: 108px;
+  margin: -58px 0 0 -54px;
+  background: radial-gradient(circle at 50% 60%, rgb(232 226 214 / 62%) 0%, rgb(176 168 154 / 26%) 50%, transparent 76%);
+  filter: blur(7px);
+  animation: revolver-haze 1.6s ease-out both;
+}
+
+@keyframes revolver-haze {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.5) translateY(-20px);
+    opacity: 0;
+  }
+}
+
+.revolver-puff {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--puff-size);
+  aspect-ratio: 1;
+  margin: calc(var(--puff-size) / -2) 0 0 calc(var(--puff-size) / -2);
+  background: radial-gradient(
+    circle at 44% 56%,
+    rgb(238 232 221 / 94%) 0%,
+    rgb(206 198 185 / 80%) 38%,
+    rgb(158 149 136 / 46%) 66%,
+    rgb(120 112 101 / 14%) 82%,
+    transparent 92%
+  );
+  /* Uneven corners turn the circle into a billow. */
+  border-radius: var(--puff-round) calc(100% - var(--puff-round)) var(--puff-round) calc(100% - var(--puff-round)) /
+    calc(100% - var(--puff-round)) var(--puff-round) calc(100% - var(--puff-round)) var(--puff-round);
+  filter: blur(var(--puff-blur));
+  animation: revolver-puff var(--puff-duration) cubic-bezier(0.12, 0.58, 0.28, 1) var(--puff-delay) both;
+}
+
+@keyframes revolver-puff {
+  0% {
+    transform: translate(0, 4px) scale(0.18) rotate(0deg);
+    opacity: 0;
+  }
+
+  8% {
+    opacity: var(--puff-opacity);
+  }
+
+  55% {
+    /* Most of the climb happens while the puff is still dense. */
+    transform: translate(calc(var(--puff-x) * 0.55), calc(var(--puff-rise) * 0.62)) scale(calc(var(--puff-scale) * 0.72))
+      rotate(calc(var(--puff-spin) * 0.6));
+    opacity: calc(var(--puff-opacity) * 0.82);
+  }
+
+  100% {
+    transform: translate(var(--puff-x), var(--puff-rise)) scale(var(--puff-scale)) rotate(var(--puff-spin));
+    opacity: 0;
+  }
+}
+
+/* ---------- The payoff ---------- */
+
+.revolver-prize {
+  display: grid;
+  justify-items: center;
+  gap: 0.1rem;
+  text-align: center;
+  animation: revolver-prize 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.4) 0.15s both;
+}
+
+.revolver-prize span {
+  color: #e9c9a0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.revolver-prize strong {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  line-height: 1.05;
+  color: var(--color-brand-lighter);
+  text-shadow: 0 2px 16px rgb(0 0 0 / 70%);
+}
+
+@keyframes revolver-prize {
+  from {
+    transform: translateY(14px) scale(0.92);
+    opacity: 0;
+  }
+}
+
+/* ---------- Panel ---------- */
+
+.revolver-panel {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.revolver-chambers-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #e9c9a0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.revolver-dots {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.revolver-dots i {
+  width: 0.6rem;
+  height: 0.6rem;
+  background: transparent;
+  border: 2px solid #8a7257;
+  border-radius: 50%;
+}
+
+.revolver-dots i.is-spent {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+.revolver-status {
+  min-height: 1.5rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.revolver-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (width <= 520px) {
+  .revolver-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revolver-chambers {
+    transition: none;
+  }
+
+  .revolver-flash,
+  .revolver-haze,
+  .revolver-puff,
+  .revolver-prize {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+  }
+}

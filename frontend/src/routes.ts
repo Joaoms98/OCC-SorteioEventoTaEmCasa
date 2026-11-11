@@ -15,4 +15,5 @@ export const publicPaths = {
   diceIdea: '/ideas/dice',
   scratchIdea: '/ideas/scratch',
   cardsIdea: '/ideas/cards',
+  revolverIdea: '/ideas/revolver',
 };

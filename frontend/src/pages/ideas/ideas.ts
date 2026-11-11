@@ -12,6 +12,7 @@ export const IDEAS: readonly [Idea, ...Idea[]] = [
   { key: 'dice', path: publicPaths.diceIdea, name: 'Sorteio no dado' },
   { key: 'scratch', path: publicPaths.scratchIdea, name: 'Raspadinha' },
   { key: 'cards', path: publicPaths.cardsIdea, name: 'Baralho' },
+  { key: 'revolver', path: publicPaths.revolverIdea, name: 'Roleta-russa' },
 ];
 
 /** Fake stock the prototypes hand out. The real draw modes get the prizes from the server. */
