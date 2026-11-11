@@ -1,7 +1,7 @@
 /*
- * Scratch-card prototype with the anatomy of a real ticket (printed header, play area with several
- * covered fields, a separate extra-chance circle and the fine print), drawn in the OCC skin.
- * The coating is painted on a canvas per field and rubbed off with `destination-out`.
+ * Scratch-card prototype with the anatomy of a real ticket (printed header with seal and serial,
+ * the covered play area, the big call and the fine print), drawn in the OCC skin. The coating is
+ * painted on a canvas and rubbed off with `destination-out`.
  */
 
 .scratch-page {
@@ -130,15 +130,10 @@
   border-radius: var(--radius-sm);
 }
 
-.ticket-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
+/* Only the printed call lives here now, so it rides level with the play area. */
 .ticket-side {
   display: grid;
-  align-content: start;
+  align-content: center;
   gap: 0.8rem;
 }
 
@@ -164,23 +159,6 @@
   letter-spacing: 0.08em;
 }
 
-.ticket-extra {
-  padding: 0.55rem;
-  background: var(--color-surface-alt);
-  border: 2px solid var(--color-border-soft);
-  border-radius: var(--radius-sm);
-  text-align: center;
-}
-
-.ticket-extra .field {
-  width: min(118px, 100%);
-  margin: 0 auto;
-}
-
-.ticket-extra-prize {
-  font-size: 0.72rem;
-}
-
 .ticket-rules {
   margin-top: 0.7rem;
   padding-top: 0.6rem;
@@ -190,20 +168,15 @@
   line-height: 1.35;
 }
 
-/* ---------- One covered field ---------- */
+/* ---------- The covered field ---------- */
 
 .field {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
   background: var(--color-surface);
   border: 2px solid var(--color-border);
   border-radius: var(--radius-sm);
-}
-
-.field-circle,
-.field-circle .field-coating {
-  border-radius: 50%;
 }
 
 .field-value {
@@ -212,20 +185,30 @@
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 0.15rem;
-  padding: 0.25rem;
-  color: var(--color-brand);
+  gap: 0.3rem;
+  padding: 0.75rem;
   text-align: center;
 }
 
-.field-value em {
+.field-label {
   color: var(--color-muted);
-  font-size: 0.62rem;
-  font-style: normal;
+  font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+}
+
+.field-prize {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(1.5rem, 5vw, 2.4rem);
+  line-height: 1.05;
+  color: var(--color-brand);
   overflow-wrap: anywhere;
+}
+
+.field-prize-empty {
+  color: var(--color-muted);
 }
 
 .field-coating {
@@ -294,11 +277,6 @@
 @media (width <= 560px) {
   .ticket-body {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ticket-side {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
   }
 
   .scratch-controls {

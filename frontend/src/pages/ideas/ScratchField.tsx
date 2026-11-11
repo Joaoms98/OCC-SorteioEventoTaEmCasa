@@ -7,7 +7,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 
 /** Share of the coating that has to go before the field opens on its own. */
 const OPEN_AT = 0.45;
-const BRUSH = 16;
+/** Scratch radius, in CSS pixels: wide enough for the field without needing dozens of passes. */
+const BRUSH_MIN = 14;
+const BRUSH_MAX = 28;
 
 interface Point {
   x: number;
@@ -35,13 +37,11 @@ function paintCoating(ctx: CanvasRenderingContext2D, width: number, height: numb
 export function ScratchField({
   children,
   label,
-  circle = false,
   forceOpen = false,
   onOpen,
 }: {
   children: ReactNode;
   label: string;
-  circle?: boolean;
   forceOpen?: boolean;
   onOpen: () => void;
 }) {
@@ -51,6 +51,7 @@ export function ScratchField({
   const last = useRef<Point | null>(null);
   const strokes = useRef(0);
   const opened = useRef(false);
+  const brush = useRef(BRUSH_MIN);
   const [open, setOpen] = useState(false);
 
   const paint = useCallback(() => {
@@ -66,6 +67,7 @@ export function ScratchField({
     if (!ctx) return;
     ctx.scale(ratio, ratio);
     ctx.globalCompositeOperation = 'source-over';
+    brush.current = Math.round(Math.min(BRUSH_MAX, Math.max(BRUSH_MIN, rect.width / 9)));
     paintCoating(ctx, rect.width, rect.height);
   }, []);
 
@@ -121,14 +123,14 @@ export function ScratchField({
     ctx.globalCompositeOperation = 'destination-out';
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = BRUSH * 2;
+    ctx.lineWidth = brush.current * 2;
     ctx.beginPath();
     if (from) {
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
     }
-    ctx.arc(to.x, to.y, BRUSH, 0, Math.PI * 2);
+    ctx.arc(to.x, to.y, brush.current, 0, Math.PI * 2);
     ctx.fill();
     strokes.current += 1;
     if (strokes.current % 4 === 0 && clearedShare() >= OPEN_AT) reveal();
@@ -158,7 +160,7 @@ export function ScratchField({
   }
 
   return (
-    <div ref={wrapRef} className={`field ${circle ? 'field-circle' : ''} ${open ? 'is-open' : ''}`}>
+    <div ref={wrapRef} className={`field ${open ? 'is-open' : ''}`}>
       <div className="field-value">{children}</div>
       <canvas
         ref={canvasRef}
