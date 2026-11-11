@@ -1,7 +1,8 @@
 /*
- * Card-deck prototype: a fan of face-down cards in the OCC skin. The picked one lifts out of the
- * fan and turns over in 3D; the others step back. The shine sweeping the backs is the one trick
- * taken from the card reference.
+ * Card-deck prototype, drawn like a real playing card in the OCC colours: rank and suit in
+ * opposite corners (the bottom one upside down), the suit watermarked behind the prize, and a
+ * crosshatched back with a central medallion. The 3D turn and the shine on the back come from
+ * the card reference in `ideias/`.
  */
 
 .cards-page {
@@ -64,7 +65,7 @@
 }
 
 .cards-slot {
-  width: clamp(92px, 21vw, 140px);
+  width: clamp(96px, 22vw, 148px);
   aspect-ratio: 5 / 7;
   padding: 0;
   background: none;
@@ -96,7 +97,7 @@
 }
 
 .cards-slot.is-dismissed {
-  opacity: 0.25;
+  opacity: 0.3;
   pointer-events: none;
   transform: rotate(var(--card-angle, 0deg)) translateY(calc(var(--card-lift, 0px) + 26px)) scale(0.94);
 }
@@ -117,33 +118,47 @@
 .cards-face {
   position: absolute;
   inset: 0;
-  display: grid;
-  align-content: center;
-  justify-items: center;
-  gap: 0.25rem;
-  padding: 0.5rem;
   overflow: hidden;
   backface-visibility: hidden;
+  background: var(--color-surface);
   border: var(--outline);
-  border-radius: var(--radius-sm);
+  /* Playing cards have a generous corner radius. */
+  border-radius: 9%;
   box-shadow: var(--shadow-sm);
 }
 
-/* Back: OCC orange with the round logo, like the back of a deck. */
+/* ---------- Back: coloured field, crosshatch, inner frame, medallion ---------- */
+
 .cards-back {
-  background:
-    repeating-linear-gradient(
-      45deg,
-      rgb(46 36 25 / 10%) 0 6px,
-      transparent 6px 12px
-    ),
-    var(--color-brand);
+  background: var(--color-brand);
 }
 
-.cards-back img {
-  width: 56%;
-  height: auto;
+.cards-back-art {
+  position: absolute;
+  inset: 6px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--color-cream);
+  border-radius: 6%;
+  background-image:
+    repeating-linear-gradient(45deg, rgb(46 36 25 / 20%) 0 3px, transparent 3px 9px),
+    repeating-linear-gradient(-45deg, rgb(46 36 25 / 20%) 0 3px, transparent 3px 9px);
+}
+
+.cards-medallion {
+  display: grid;
+  place-items: center;
+  width: 54%;
+  aspect-ratio: 1;
+  background: var(--color-cream);
   border: 2px solid var(--color-border);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px var(--color-brand-light);
+}
+
+.cards-medallion img {
+  width: 78%;
+  height: auto;
   border-radius: 50%;
 }
 
@@ -166,46 +181,86 @@
   }
 }
 
+/* ---------- Front: a real card face carrying the prize ---------- */
+
 .cards-front {
-  background: var(--color-surface);
-  color: var(--color-text);
   transform: rotateY(180deg);
+}
+
+/* Red suits take the brand orange; black suits the brand brown. */
+.cards-suit-hearts,
+.cards-suit-diamonds {
+  --suit: var(--color-brand);
+}
+
+.cards-suit-spades,
+.cards-suit-clubs {
+  --suit: var(--color-brown);
 }
 
 .cards-corner {
   position: absolute;
-  top: 0.35rem;
-  left: 0.45rem;
-  color: var(--color-brand);
-  font-family: var(--font-display);
-  font-variation-settings: 'SOFT' 100;
-  font-size: 0.75rem;
-  font-style: normal;
+  top: 5%;
+  left: 6%;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  color: var(--suit);
+  line-height: 1;
 }
 
-.cards-corner-end {
+.cards-corner b {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(0.8rem, 2.6vw, 1rem);
+}
+
+/* The second corner is the first one upside down, like on a real card. */
+.cards-corner:last-child {
   top: auto;
   left: auto;
-  right: 0.45rem;
-  bottom: 0.35rem;
+  right: 6%;
+  bottom: 5%;
   transform: rotate(180deg);
 }
 
-.cards-front-label {
+.cards-watermark {
+  position: absolute;
+  inset: 0;
+  width: 64%;
+  height: auto;
+  margin: auto;
+  color: var(--suit);
+  opacity: 0.12;
+}
+
+.cards-prize {
+  position: absolute;
+  inset: 18% 10%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.15rem;
+  padding: 0.3rem;
+  text-align: center;
+  background: rgb(255 254 248 / 86%);
+  border: 2px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+}
+
+.cards-prize-label {
   color: var(--color-muted);
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-.cards-front-prize {
-  padding: 0 0.3rem;
+.cards-prize-name {
   font-family: var(--font-display);
   font-variation-settings: 'SOFT' 100;
-  font-size: clamp(0.95rem, 3.4vw, 1.2rem);
+  font-size: clamp(0.9rem, 3.2vw, 1.15rem);
   line-height: 1.1;
-  text-align: center;
   color: var(--color-brand);
   overflow-wrap: anywhere;
 }

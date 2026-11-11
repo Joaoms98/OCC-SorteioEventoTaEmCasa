@@ -1,4 +1,4 @@
-import { Lightbulb, RotateCcw } from 'lucide-react';
+import { Club, Diamond, Heart, Lightbulb, RotateCcw, Spade, type LucideIcon } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ParallaxBackground } from '../../live/ParallaxBackground';
 import { useConfetti } from '../../live/useConfetti';
@@ -8,19 +8,56 @@ import './cards.css';
 
 /**
  * Prototype of a card-deck draw, up for the crew to vote on: pick a card from the fan, it turns
- * over and shows the prize. Everything is mocked in the browser — the prize is drawn on the client,
- * nothing is registered and nobody wins anything. The real draw would come from the server.
+ * over and the prize is printed on it. Built like a real playing card — rank and suit in opposite
+ * corners, the suit watermarked behind the prize, an ornamented back — in the OCC colours.
  *
- * The 3D turn and the shine sweeping the back come from the card reference kept in `ideias/`;
- * the artwork is ours.
+ * Everything is mocked in the browser: the prize is drawn on the client, nothing is registered.
  */
 
 const DECK_SIZE = 5;
 const FLIP_MS = 700;
 
+const SUITS = ['spades', 'hearts', 'diamonds', 'clubs'] as const;
+type Suit = (typeof SUITS)[number];
+
+const SUIT_ICON: Record<Suit, LucideIcon> = { spades: Spade, hearts: Heart, diamonds: Diamond, clubs: Club };
+const RANKS = ['A', 'K', 'Q', 'J', '10', '9', '8', '7'];
+
+interface PlayingCard {
+  rank: string;
+  suit: Suit;
+}
+
 type Phase = 'deck' | 'flipping' | 'revealed';
 
+/** A hand of distinct cards, so no two cards in the fan look the same. */
+function dealHand(size: number): PlayingCard[] {
+  const deck: PlayingCard[] = [];
+  for (const suit of SUITS) for (const rank of RANKS) deck.push({ rank, suit });
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const a = deck[i];
+    const b = deck[j];
+    if (a && b) {
+      deck[i] = b;
+      deck[j] = a;
+    }
+  }
+  return deck.slice(0, size);
+}
+
+function CornerMark({ card }: { card: PlayingCard }) {
+  const Icon = SUIT_ICON[card.suit];
+  return (
+    <span className="cards-corner">
+      <b>{card.rank}</b>
+      <Icon size={13} aria-hidden="true" fill="currentColor" strokeWidth={1} />
+    </span>
+  );
+}
+
 export function CardsPage() {
+  const [hand, setHand] = useState<PlayingCard[]>(() => dealHand(DECK_SIZE));
   const [phase, setPhase] = useState<Phase>('deck');
   const [chosen, setChosen] = useState<number | null>(null);
   const [prize, setPrize] = useState<string | null>(null);
@@ -51,7 +88,8 @@ export function CardsPage() {
     );
   }
 
-  function reset() {
+  function shuffle() {
+    setHand(dealHand(DECK_SIZE));
     setPhase('deck');
     setChosen(null);
     setPrize(null);
@@ -79,8 +117,9 @@ export function CardsPage() {
 
       <main className="cards-main">
         <div className="cards-deck" key={round}>
-          {Array.from({ length: DECK_SIZE }, (_, index) => {
+          {hand.map((card, index) => {
             const isChosen = chosen === index;
+            const Icon = SUIT_ICON[card.suit];
             const slotStyle = {
               '--card-angle': `${(index - center) * 7}deg`,
               '--card-lift': `${Math.abs(index - center) * 12}px`,
@@ -88,7 +127,7 @@ export function CardsPage() {
             } as CSSProperties;
             return (
               <button
-                key={index}
+                key={`${card.rank}-${card.suit}`}
                 type="button"
                 className={`cards-slot ${isChosen ? 'is-chosen' : ''} ${chosen !== null && !isChosen ? 'is-dismissed' : ''}`}
                 style={slotStyle}
@@ -100,17 +139,23 @@ export function CardsPage() {
               >
                 <span className="cards-card">
                   <span className="cards-face cards-back" aria-hidden="true">
-                    <img src="/brand/occ-round.webp" alt="" width={56} height={56} />
+                    <span className="cards-back-art">
+                      <span className="cards-medallion">
+                        <img src="/brand/occ-round.webp" alt="" width={44} height={44} />
+                      </span>
+                    </span>
                   </span>
-                  <span className="cards-face cards-front" aria-hidden="true">
-                    <em className="cards-corner">OCC</em>
+
+                  <span className={`cards-face cards-front cards-suit-${card.suit}`} aria-hidden="true">
+                    <CornerMark card={card} />
+                    <Icon className="cards-watermark" size={120} aria-hidden="true" fill="currentColor" strokeWidth={0} />
                     {isChosen && prize ? (
-                      <>
-                        <span className="cards-front-label">Você ganhou</span>
-                        <strong className="cards-front-prize">{prize}</strong>
-                      </>
+                      <span className="cards-prize">
+                        <span className="cards-prize-label">Você ganhou</span>
+                        <strong className="cards-prize-name">{prize}</strong>
+                      </span>
                     ) : null}
-                    <em className="cards-corner cards-corner-end">OCC</em>
+                    <CornerMark card={card} />
                   </span>
                 </span>
               </button>
@@ -127,7 +172,7 @@ export function CardsPage() {
         </p>
 
         <div className="cards-controls">
-          <button type="button" className="btn btn-primary btn-lg" onClick={reset} disabled={phase === 'deck'}>
+          <button type="button" className="btn btn-primary btn-lg" onClick={shuffle} disabled={phase === 'deck'}>
             <RotateCcw size={20} aria-hidden="true" /> Embaralhar de novo
           </button>
         </div>
