@@ -1,9 +1,8 @@
-import { ArrowLeft, Dices, Hand, Lightbulb, RotateCcw } from 'lucide-react';
+import { Dices, Hand, Lightbulb, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { Link } from 'react-router';
 import { ParallaxBackground } from '../../live/ParallaxBackground';
 import { useConfetti } from '../../live/useConfetti';
-import { publicPaths } from '../../routes';
+import { IdeaNav } from './IdeaNav';
 import './dice.css';
 
 /**
@@ -355,11 +354,7 @@ export function DicePage() {
         </section>
       </main>
 
-      <footer className="dice-footer">
-        <Link to={publicPaths.home} className="btn btn-secondary">
-          <ArrowLeft size={18} aria-hidden="true" /> Ver todos os sorteios
-        </Link>
-      </footer>
+      <IdeaNav current="dice" />
     </div>
   );
 }

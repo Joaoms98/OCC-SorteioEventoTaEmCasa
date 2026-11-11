@@ -1,0 +1,9 @@
+/* Footer shared by the prototypes: back to the real raffles, or on to the next idea. */
+.idea-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}

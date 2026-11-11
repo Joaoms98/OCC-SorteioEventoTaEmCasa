@@ -6,6 +6,7 @@ import { EventDetailPage } from './pages/event-detail/EventDetailPage';
 import { EventsPage } from './pages/EventsPage';
 import { HomePage } from './pages/HomePage';
 import { DicePage } from './pages/ideas/DicePage';
+import { ScratchPage } from './pages/ideas/ScratchPage';
 import { LivePage } from './pages/LivePage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -19,6 +20,7 @@ export function App() {
       <Route path="/register/:eventId" element={<PublicRegistrationPage />} />
       <Route path="/live/:eventId" element={<LivePage />} />
       <Route path={publicPaths.diceIdea} element={<DicePage />} />
+      <Route path={publicPaths.scratchIdea} element={<ScratchPage />} />
 
       {/* Organizer area: only reachable by typing /admin (the public pages do not link to it). */}
       <Route path="/admin/login" element={<LoginPage />} />

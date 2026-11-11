@@ -63,7 +63,7 @@ export function HomePage() {
       </main>
 
       <Link to={publicPaths.diceIdea} className="btn btn-secondary">
-        <Lightbulb size={18} aria-hidden="true" /> Ideia nova: sorteio no dado
+        <Lightbulb size={18} aria-hidden="true" /> Ideias novas de sorteio
       </Link>
 
       <footer className="home-footer">Os Crema Culture · conectando pessoas, cultura e liberdade</footer>

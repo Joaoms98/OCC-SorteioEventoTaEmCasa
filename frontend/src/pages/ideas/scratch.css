@@ -1,0 +1,246 @@
+/*
+ * Scratch-card prototype in the OCC skin: cream ticket with the brand's chunky border, a bronze
+ * coating painted on a canvas and rubbed off with `destination-out`, and the OCC coin as the cursor.
+ */
+
+.scratch-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 2.5rem 1rem 1.5rem;
+  color: var(--color-cream);
+}
+
+.scratch-hero {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  max-width: 44rem;
+  text-align: center;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 60%);
+}
+
+.scratch-hero h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.scratch-hero p {
+  color: #e9c9a0;
+  font-weight: 600;
+}
+
+.scratch-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.scratch-note {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.scratch-main {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: 100%;
+  max-width: 620px;
+}
+
+/* ---------- The ticket ---------- */
+
+.scratch-ticket {
+  width: 100%;
+  padding: 0.9rem;
+  background: var(--color-surface);
+  border: var(--outline);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--color-text);
+}
+
+.scratch-ticket-top {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding-bottom: 0.7rem;
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: 1.1rem;
+  border-bottom: 2px dashed var(--color-border-soft);
+}
+
+.scratch-ticket-top img {
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.scratch-serial {
+  margin-left: auto;
+  color: var(--color-muted);
+  font-family: var(--font);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.scratch-card {
+  position: relative;
+  margin-top: 0.7rem;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--color-surface-alt);
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+}
+
+.scratch-result {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.scratch-result-label {
+  color: var(--color-muted);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.scratch-result-prize {
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(1.8rem, 6vw, 2.8rem);
+  line-height: 1.05;
+  color: var(--color-brand);
+}
+
+.scratch-result-empty {
+  color: var(--color-muted);
+}
+
+/* The opened card gives the prize a little pop, once the coating is gone. */
+.scratch-result.is-open .scratch-result-prize {
+  animation: scratch-pop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.4) both;
+}
+
+@keyframes scratch-pop {
+  from {
+    transform: scale(0.82);
+    opacity: 0.4;
+  }
+}
+
+.scratch-coating {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* The coin is the cursor, and dragging has to scratch instead of scrolling the page. */
+  cursor: none;
+  touch-action: none;
+  transition: opacity 0.4s ease;
+}
+
+.scratch-coating.is-revealed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scratch-coin {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: -28px 0 0 -28px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  filter: drop-shadow(0 6px 6px rgb(0 0 0 / 45%));
+}
+
+.scratch-coin[data-on] {
+  opacity: 1;
+}
+
+.scratch-coin img {
+  display: block;
+  border: 3px solid var(--color-border);
+  border-radius: 50%;
+  transform: rotate(-12deg);
+}
+
+.scratch-ticket-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+.scratch-track {
+  flex: 1;
+  height: 10px;
+  background: var(--color-surface-alt);
+  border: var(--outline);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.scratch-fill {
+  height: 100%;
+  width: 0;
+  background: var(--color-brand);
+  transition: width 0.2s linear;
+}
+
+.scratch-percent {
+  min-width: 7.5rem;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.scratch-status {
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 60%);
+}
+
+.scratch-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (width <= 560px) {
+  .scratch-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scratch-percent {
+    min-width: 6.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scratch-result.is-open .scratch-result-prize {
+    animation: none;
+  }
+
+  .scratch-coating,
+  .scratch-fill,
+  .scratch-coin {
+    transition: none;
+  }
+}

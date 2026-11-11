@@ -13,4 +13,5 @@ export const publicPaths = {
   live: (eventId: string) => `/live/${eventId}`,
   /** Prototype of a draw type the crew is voting on; wired to nothing. */
   diceIdea: '/ideas/dice',
+  scratchIdea: '/ideas/scratch',
 };

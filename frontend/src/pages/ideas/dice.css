@@ -376,13 +376,6 @@
   border-bottom: 0;
 }
 
-.dice-footer {
-  display: grid;
-  justify-items: center;
-  margin-top: auto;
-  padding-top: 0.5rem;
-}
-
 @media (width <= 760px) {
   .dice-main {
     grid-template-columns: minmax(0, 1fr);
