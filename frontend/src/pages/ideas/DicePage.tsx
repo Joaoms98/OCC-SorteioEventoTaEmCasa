@@ -1,31 +1,33 @@
-import { Dices, Hand, Lightbulb, RotateCcw } from 'lucide-react';
+import { Dices, Lightbulb, RotateCcw } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ParallaxBackground } from '../../live/ParallaxBackground';
 import { useConfetti } from '../../live/useConfetti';
 import { IdeaNav } from './IdeaNav';
+import { mockPrize } from './ideas';
 import './dice.css';
 
 /**
- * Prototype of a possible new draw type, up for the crew to vote on: a die instead of a wheel.
- * Rebuilt in this project's stack and brand from the dice reference kept in `ideias/`.
- * Nothing here talks to the API: it draws no prize, registers nobody and awards nothing.
+ * Prototype of a dice duel, up for the crew to vote on: you roll three dice, the house answers
+ * with three, and the bigger sum takes the prize. Written from the dice reference in `ideias/`,
+ * rebuilt in this project's stack and brand.
+ *
+ * Everything is mocked in the browser: the rolls and the prize are drawn on the client, nothing
+ * is registered and nobody wins anything.
  */
 
-const TARGET = 50;
-/** The house stops pressing its luck once the bank is worth more than another roll. */
-const HOUSE_BANK_LIMIT = 15;
+/** Dice each side throws. */
+const ROLLS = 3;
 const TOSS_MS = 1100;
 
 type Side = 'you' | 'house';
 
 interface Game {
-  you: number;
-  house: number;
-  /** Points of the current turn, lost on a 1 and banked on hold. */
-  bank: number;
-  turn: Side;
+  you: number[];
+  house: number[];
+  turn: Side | 'done';
   busy: boolean;
-  winner: Side | null;
+  winner: Side | 'tie' | null;
+  prize: string | null;
 }
 
 /** One throw: the landed face plus where the die lands and how much it spins getting there. */
@@ -37,11 +39,6 @@ interface Toss {
   rz: number;
   tx: number;
   ty: number;
-}
-
-interface LogLine {
-  id: number;
-  text: string;
 }
 
 type DieFace = 1 | 2 | 3 | 4 | 5 | 6;
@@ -60,7 +57,7 @@ const FACES: readonly DieFace[] = [1, 2, 3, 4, 5, 6];
 const CELLS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const SIDES: readonly Side[] = ['you', 'house'];
 
-const freshGame = (): Game => ({ you: 0, house: 0, bank: 0, turn: 'you', busy: false, winner: null });
+const freshGame = (): Game => ({ you: [], house: [], turn: 'you', busy: false, winner: null, prize: null });
 const restingToss = (): Toss => ({ id: 0, face: 5, dx: 0, dy: 0, rz: 0, tx: 2, ty: -2 });
 
 const wait = (ms: number) =>
@@ -70,19 +67,29 @@ const wait = (ms: number) =>
 const between = (min: number, max: number) => min + Math.random() * (max - min);
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const named = (side: Side) => (side === 'you' ? 'Você' : 'A Casa');
+const total = (rolls: readonly number[]) => rolls.reduce((sum, face) => sum + face, 0);
+
+/** A die lying on the table: the same pip layout as the thrown one, flat. */
+function FlatDie({ face }: { face: DieFace | null }) {
+  return (
+    <span className={`dice-flat ${face === null ? 'is-empty' : ''}`} aria-hidden="true">
+      {face === null
+        ? null
+        : CELLS.map((cell) => <span key={cell} className="dice-pip" data-on={PIPS[face].includes(cell) ? '' : undefined} />)}
+    </span>
+  );
+}
 
 export function DicePage() {
   const [game, setGame] = useState<Game>(freshGame);
   const [toss, setToss] = useState<Toss>(restingToss);
-  const [log, setLog] = useState<LogLine[]>([]);
-  const [status, setStatus] = useState('Sua vez. Role o dado para começar.');
+  const [status, setStatus] = useState('Sua vez. Role os três dados.');
   const { canvasRef, celebrate } = useConfetti();
 
-  // The async turns read the live game from here, so a captured render can never go stale.
+  // The async house turn reads the live game from here, so a captured render can never go stale.
   const gameRef = useRef(game);
   const trayRef = useRef<HTMLDivElement>(null);
   const alive = useRef(true);
-  const lineId = useRef(0);
 
   useEffect(() => {
     alive.current = true;
@@ -96,30 +103,9 @@ export function DicePage() {
     setGame(next);
   }
 
-  function addLine(text: string) {
-    lineId.current += 1;
-    const line = { id: lineId.current, text };
-    setLog((current) => [line, ...current].slice(0, 7));
-  }
-
-  function shakeTray() {
-    const tray = trayRef.current;
-    if (!tray || reducedMotion()) return;
-    tray.animate(
-      [
-        { transform: 'translateX(0)' },
-        { transform: 'translateX(-8px)' },
-        { transform: 'translateX(8px)' },
-        { transform: 'translateX(-5px)' },
-        { transform: 'translateX(0)' },
-      ],
-      { duration: 400, easing: 'ease-in-out' },
-    );
-  }
-
   /** Throws the die and resolves with the face it landed on, once the animation is over. */
-  async function throwDie(): Promise<number> {
-    const face = 1 + Math.floor(Math.random() * 6);
+  async function throwDie(): Promise<DieFace> {
+    const face = ((1 + Math.floor(Math.random() * 6)) as DieFace);
     const tray = trayRef.current;
     const reach = tray ? Math.round(Math.max(20, Math.min(80, tray.clientWidth / 2 - 90))) : 40;
     setToss((current) => ({
@@ -135,96 +121,64 @@ export function DicePage() {
     return face;
   }
 
-  async function bust(side: Side) {
-    addLine(`${named(side)} tirou 1 e perdeu o cofre`);
-    commit({ ...gameRef.current, bank: 0 });
-    setStatus(side === 'you' ? 'Tirou 1. Cofre perdido, vez da Casa.' : 'A Casa tirou 1 e perdeu o cofre. Sua vez.');
-    shakeTray();
-    await wait(reducedMotion() ? 300 : 900);
-    if (!alive.current) return;
-    passTurn();
-  }
-
-  function passTurn() {
+  function decide() {
     const current = gameRef.current;
-    const turn: Side = current.turn === 'you' ? 'house' : 'you';
-    commit({ ...current, turn, bank: 0, busy: turn === 'house' });
-    if (turn === 'house') {
-      void houseTurn();
-      return;
-    }
-    setStatus((shown) => (shown.includes('Sua vez') ? shown : 'Sua vez. Role ou guarde.'));
-  }
-
-  function hold(side: Side) {
-    const current = gameRef.current;
-    if (current.busy && side === 'you') return;
-    if (current.bank === 0 || current.winner) return;
-    const gained = current.bank;
-    const score = (side === 'you' ? current.you : current.house) + gained;
-    const banked: Game =
-      side === 'you' ? { ...current, you: score, bank: 0 } : { ...current, house: score, bank: 0 };
-    addLine(`${named(side)} guardou ${gained} — total ${score}`);
-
-    if (score >= TARGET) {
-      commit({ ...banked, busy: false, winner: side });
-      setStatus(side === 'you' ? 'Você chegou a 50. Fim de jogo.' : 'A Casa chegou a 50. Fim de jogo.');
-      if (side === 'you') celebrate();
-      return;
-    }
-    commit(banked);
-    setStatus(side === 'you' ? `Guardou ${gained}. Vez da Casa.` : `A Casa guardou ${gained}. Sua vez.`);
-    passTurn();
-  }
-
-  async function playerRoll() {
-    const current = gameRef.current;
-    if (current.busy || current.winner || current.turn !== 'you') return;
-    commit({ ...current, busy: true });
-    const face = await throwDie();
-    if (!alive.current) return;
-    if (face === 1) {
-      await bust('you');
-      return;
-    }
-    const bank = gameRef.current.bank + face;
-    commit({ ...gameRef.current, bank, busy: false });
-    addLine(`Você tirou ${face} — ${bank} no cofre`);
-    setStatus(`Cofre em ${bank}. Role de novo ou guarde.`);
+    const mine = total(current.you);
+    const theirs = total(current.house);
+    const winner: Side | 'tie' = mine > theirs ? 'you' : theirs > mine ? 'house' : 'tie';
+    const prize = winner === 'you' ? mockPrize() : null;
+    commit({ ...current, turn: 'done', busy: false, winner, prize });
+    setStatus(
+      winner === 'you'
+        ? `${mine} a ${theirs}: você ganhou ${prize}.`
+        : winner === 'house'
+          ? `${theirs} a ${mine} para a Casa. Não foi dessa vez.`
+          : `Empate em ${mine}. Ninguém leva o brinde.`,
+    );
+    if (winner === 'you') celebrate();
   }
 
   async function houseTurn() {
-    setStatus('A Casa está rolando.');
-    await wait(reducedMotion() ? 200 : 800);
-    while (alive.current && !gameRef.current.winner && gameRef.current.turn === 'house') {
+    setStatus('A Casa responde.');
+    for (let roll = 0; roll < ROLLS; roll++) {
+      await wait(reducedMotion() ? 120 : 600);
+      if (!alive.current) return;
       const face = await throwDie();
       if (!alive.current) return;
-      if (face === 1) {
-        await bust('house');
-        return;
-      }
-      const bank = gameRef.current.bank + face;
-      commit({ ...gameRef.current, bank });
-      addLine(`A Casa tirou ${face} — ${bank} no cofre`);
-      if (gameRef.current.house + bank >= TARGET || bank >= HOUSE_BANK_LIMIT) {
-        await wait(reducedMotion() ? 200 : 700);
-        if (!alive.current) return;
-        hold('house');
-        return;
-      }
-      await wait(reducedMotion() ? 150 : 600);
+      const house = [...gameRef.current.house, face];
+      commit({ ...gameRef.current, house });
+      setStatus(`A Casa tirou ${face} — soma ${total(house)}.`);
     }
+    await wait(reducedMotion() ? 120 : 650);
+    if (!alive.current) return;
+    decide();
+  }
+
+  async function roll() {
+    const current = gameRef.current;
+    if (current.busy || current.turn !== 'you' || current.you.length >= ROLLS) return;
+    commit({ ...current, busy: true });
+    const face = await throwDie();
+    if (!alive.current) return;
+    const you = [...gameRef.current.you, face];
+    const complete = you.length >= ROLLS;
+    commit({ ...gameRef.current, you, busy: complete, turn: complete ? 'house' : 'you' });
+    setStatus(
+      complete
+        ? `Você somou ${total(you)}. Agora é a Casa.`
+        : `Você tirou ${face} — soma ${total(you)}. Faltam ${ROLLS - you.length}.`,
+    );
+    if (complete) void houseTurn();
   }
 
   function reset() {
     commit(freshGame());
     setToss(restingToss);
-    setLog([]);
-    setStatus('Sua vez. Role o dado para começar.');
+    setStatus('Sua vez. Role os três dados.');
   }
 
   useEffect(() => {
-    // Registered once: the handlers below read the live game from gameRef, not from this render.
+    // Registered once: the handler reads the live game from gameRef, not from this render.
     const onKey = (event: KeyboardEvent) => {
       if (event.ctrlKey || event.metaKey || event.altKey) return;
       const target = event.target;
@@ -233,18 +187,14 @@ export function DicePage() {
       const key = event.key.toLowerCase();
       if (key === 'enter' || key === ' ') {
         event.preventDefault();
-        void playerRoll();
-      }
-      if (key === 'g') {
-        event.preventDefault();
-        hold('you');
+        void roll();
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
 
-  const myTurn = game.turn === 'you' && !game.busy && !game.winner;
+  const myTurn = game.turn === 'you' && !game.busy;
   const tossStyle = {
     '--dice-dx': `${toss.dx}px`,
     '--dice-dy': `${toss.dy}px`,
@@ -262,10 +212,9 @@ export function DicePage() {
         <span className="badge badge-muted dice-tag">
           <Lightbulb size={16} aria-hidden="true" /> Ideia em votação
         </span>
-        <h1>Guarda ou Rola</h1>
+        <h1>Duelo de dados</h1>
         <p>
-          Cada rolagem soma ao cofre. Tirou 1, o cofre vai embora. Guarde para somar ao placar. Quem chegar a {TARGET}{' '}
-          primeiro ganha.
+          Você rola três dados, a Casa rola outros três. Quem somar mais leva o brinde. Empate, joga de novo.
         </p>
         <p className="dice-note">
           Protótipo de um tipo de sorteio novo, para a galera escolher. Ainda não vale brinde: nada aqui é registrado.
@@ -275,15 +224,18 @@ export function DicePage() {
       <main className="dice-main">
         <section className="card dice-scores" aria-label="Placar">
           {SIDES.map((side) => {
-            const score = side === 'you' ? game.you : game.house;
+            const rolls = side === 'you' ? game.you : game.house;
+            const active = game.turn === side && !game.winner;
             return (
-              <div key={side} className={`dice-score ${game.turn === side && !game.winner ? 'is-turn' : ''}`}>
+              <div key={side} className={`dice-score ${active ? 'is-turn' : ''} ${game.winner === side ? 'is-winner' : ''}`}>
                 <div className="dice-score-top">
                   <span className="dice-score-name">{named(side)}</span>
-                  <span className="dice-score-value">{score}</span>
+                  <span className="dice-score-value">{total(rolls)}</span>
                 </div>
-                <div className="dice-track">
-                  <div className="dice-fill" style={{ width: `${Math.min(100, (score / TARGET) * 100)}%` }} />
+                <div className="dice-roll-row">
+                  {Array.from({ length: ROLLS }, (_, index) => (
+                    <FlatDie key={index} face={(rolls[index] as DieFace | undefined) ?? null} />
+                  ))}
                 </div>
               </div>
             );
@@ -291,11 +243,6 @@ export function DicePage() {
         </section>
 
         <section className="dice-tray" ref={trayRef} aria-label="Mesa">
-          <div className="dice-bank">
-            <strong>{game.bank}</strong>
-            <span>no cofre</span>
-          </div>
-
           <div key={toss.id} className={`dice-toss ${toss.id > 0 ? 'is-rolling' : ''}`} style={tossStyle}>
             <div className="dice-cube" data-face={toss.face} role="img" aria-label={`Dado mostrando ${toss.face}`}>
               {FACES.map((face) => (
@@ -312,46 +259,35 @@ export function DicePage() {
             {status}
           </p>
 
-          {game.winner && (
+          {game.winner ? (
             <div className="dice-result">
-              <h2>{game.winner === 'you' ? 'Você ganhou' : 'A Casa ganhou'}</h2>
-              <p>
-                Placar final: você {game.you}, Casa {game.house}.
+              <h2>
+                {game.winner === 'you' ? 'Você ganhou' : game.winner === 'house' ? 'A Casa ganhou' : 'Empate'}
+              </h2>
+              <p className={game.winner === 'you' ? 'dice-result-prize' : ''}>
+                {game.winner === 'you'
+                  ? game.prize
+                  : game.winner === 'house'
+                    ? `${total(game.house)} a ${total(game.you)}. Não foi dessa vez.`
+                    : `${total(game.you)} a ${total(game.house)}. Ninguém leva: role de novo.`}
               </p>
               <button type="button" className="btn btn-primary" onClick={reset}>
-                <RotateCcw size={18} aria-hidden="true" /> Jogar de novo
+                <RotateCcw size={18} aria-hidden="true" />{' '}
+                {game.winner === 'tie' ? 'Desempatar' : 'Jogar de novo'}
               </button>
             </div>
-          )}
+          ) : null}
         </section>
 
         <div className="dice-controls">
-          <button type="button" className="btn btn-primary btn-lg" onClick={() => void playerRoll()} disabled={!myTurn}>
+          <button type="button" className="btn btn-primary btn-lg" onClick={() => void roll()} disabled={!myTurn}>
             <Dices size={20} aria-hidden="true" /> Rolar o dado
           </button>
-          <button
-            type="button"
-            className="btn btn-secondary btn-lg"
-            onClick={() => hold('you')}
-            disabled={!myTurn || game.bank === 0}
-          >
-            <Hand size={20} aria-hidden="true" /> Guardar{game.bank > 0 ? ` ${game.bank}` : ''}
+          <button type="button" className="btn btn-secondary btn-lg" onClick={reset} disabled={game.busy}>
+            <RotateCcw size={20} aria-hidden="true" /> Começar de novo
           </button>
         </div>
-        <p className="dice-keys small">Atalhos: Enter ou Espaço para rolar, G para guardar.</p>
-
-        <section className="card dice-log" aria-label="Últimas rolagens">
-          <h2>Últimas rolagens</h2>
-          {log.length === 0 ? (
-            <p className="muted">Nenhuma rolagem ainda.</p>
-          ) : (
-            <ul>
-              {log.map((line) => (
-                <li key={line.id}>{line.text}</li>
-              ))}
-            </ul>
-          )}
-        </section>
+        <p className="dice-keys small">Atalho: Enter ou Espaço para rolar.</p>
       </main>
 
       <IdeaNav current="dice" />

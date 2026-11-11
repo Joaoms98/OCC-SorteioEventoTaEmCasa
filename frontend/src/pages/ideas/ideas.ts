@@ -9,7 +9,7 @@ export interface Idea {
 
 /** Typed as non-empty so the wrap-around below always lands on a real idea. */
 export const IDEAS: readonly [Idea, ...Idea[]] = [
-  { key: 'dice', path: publicPaths.diceIdea, name: 'Sorteio no dado' },
+  { key: 'dice', path: publicPaths.diceIdea, name: 'Duelo de dados' },
   { key: 'scratch', path: publicPaths.scratchIdea, name: 'Raspadinha' },
   { key: 'cards', path: publicPaths.cardsIdea, name: 'Baralho' },
   { key: 'revolver', path: publicPaths.revolverIdea, name: 'Roleta-russa' },
