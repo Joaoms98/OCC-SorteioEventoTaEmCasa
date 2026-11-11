@@ -14,4 +14,5 @@ export const publicPaths = {
   /** Prototype of a draw type the crew is voting on; wired to nothing. */
   diceIdea: '/ideas/dice',
   scratchIdea: '/ideas/scratch',
+  cardsIdea: '/ideas/cards',
 };

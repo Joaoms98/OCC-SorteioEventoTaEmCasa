@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ParallaxBackground } from '../../live/ParallaxBackground';
 import { useConfetti } from '../../live/useConfetti';
 import { IdeaNav } from './IdeaNav';
+import { mockPrize } from './ideas';
 import './scratch.css';
 
 /**
@@ -12,7 +13,6 @@ import './scratch.css';
  * thing the server would draw it, like every other draw mode.
  */
 
-const MOCK_PRIZES = ['Camiseta OCC', 'Boné OCC', 'Kit de cabelo', 'Caneca OCC', 'Cartela de adesivos'];
 /** Mocked odds, generous on purpose so the prototype is fun to try out. */
 const WIN_CHANCE = 0.5;
 /** How much of the coating has to be gone before the card opens on its own. */
@@ -29,8 +29,7 @@ let ticketCount = 0;
 
 function drawTicket(): Ticket {
   ticketCount += 1;
-  const prize = Math.random() < WIN_CHANCE ? MOCK_PRIZES[Math.floor(Math.random() * MOCK_PRIZES.length)] : null;
-  return { id: ticketCount, prize: prize ?? null };
+  return { id: ticketCount, prize: Math.random() < WIN_CHANCE ? mockPrize() : null };
 }
 
 const serial = (id: number) => `OCC-${String(id).padStart(4, '0')}`;

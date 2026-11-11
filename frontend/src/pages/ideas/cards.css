@@ -1,0 +1,241 @@
+/*
+ * Card-deck prototype: a fan of face-down cards in the OCC skin. The picked one lifts out of the
+ * fan and turns over in 3D; the others step back. The shine sweeping the backs is the one trick
+ * taken from the card reference.
+ */
+
+.cards-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 100vh;
+  padding: 2.5rem 1rem 1.5rem;
+  color: var(--color-cream);
+}
+
+.cards-hero {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  max-width: 44rem;
+  text-align: center;
+  text-shadow: 0 2px 14px rgb(0 0 0 / 60%);
+}
+
+.cards-hero h1 {
+  margin: 0;
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  line-height: 1.05;
+}
+
+.cards-hero p {
+  color: #e9c9a0;
+  font-weight: 600;
+}
+
+.cards-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.cards-note {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.cards-main {
+  display: grid;
+  justify-items: center;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 620px;
+}
+
+/* ---------- The fan ---------- */
+
+.cards-deck {
+  display: flex;
+  justify-content: center;
+  /* Room for the lifted card and its shadow, so nothing is clipped. */
+  padding: 2.5rem 0 1.5rem;
+  perspective: 1200px;
+}
+
+.cards-slot {
+  width: clamp(92px, 21vw, 140px);
+  aspect-ratio: 5 / 7;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  z-index: var(--card-z, 1);
+  transform: rotate(var(--card-angle, 0deg)) translateY(var(--card-lift, 0px));
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.7, 0.3, 1),
+    opacity 0.35s ease;
+}
+
+.cards-slot + .cards-slot {
+  margin-left: -18px;
+}
+
+.cards-slot:hover:not(:disabled),
+.cards-slot:focus-visible {
+  transform: rotate(var(--card-angle, 0deg)) translateY(calc(var(--card-lift, 0px) - 18px));
+}
+
+.cards-slot:disabled {
+  cursor: default;
+}
+
+.cards-slot.is-chosen {
+  z-index: 9;
+  transform: rotate(0deg) translateY(-26px) scale(1.06);
+}
+
+.cards-slot.is-dismissed {
+  opacity: 0.25;
+  pointer-events: none;
+  transform: rotate(var(--card-angle, 0deg)) translateY(calc(var(--card-lift, 0px) + 26px)) scale(0.94);
+}
+
+.cards-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+.cards-slot.is-chosen .cards-card {
+  transform: rotateY(180deg);
+}
+
+.cards-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  overflow: hidden;
+  backface-visibility: hidden;
+  border: var(--outline);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Back: OCC orange with the round logo, like the back of a deck. */
+.cards-back {
+  background:
+    repeating-linear-gradient(
+      45deg,
+      rgb(46 36 25 / 10%) 0 6px,
+      transparent 6px 12px
+    ),
+    var(--color-brand);
+}
+
+.cards-back img {
+  width: 56%;
+  height: auto;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+}
+
+.cards-back::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgb(255 255 255 / 38%) 50%, transparent 65%);
+  transform: translateX(-120%);
+}
+
+.cards-slot:hover:not(:disabled) .cards-back::after,
+.cards-slot:focus-visible .cards-back::after {
+  animation: cards-shine 0.9s ease;
+}
+
+@keyframes cards-shine {
+  to {
+    transform: translateX(120%);
+  }
+}
+
+.cards-front {
+  background: var(--color-surface);
+  color: var(--color-text);
+  transform: rotateY(180deg);
+}
+
+.cards-corner {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.45rem;
+  color: var(--color-brand);
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.cards-corner-end {
+  top: auto;
+  left: auto;
+  right: 0.45rem;
+  bottom: 0.35rem;
+  transform: rotate(180deg);
+}
+
+.cards-front-label {
+  color: var(--color-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.cards-front-prize {
+  padding: 0 0.3rem;
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 100;
+  font-size: clamp(0.95rem, 3.4vw, 1.2rem);
+  line-height: 1.1;
+  text-align: center;
+  color: var(--color-brand);
+  overflow-wrap: anywhere;
+}
+
+.cards-status {
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 2px 10px rgb(0 0 0 / 60%);
+}
+
+.cards-controls {
+  display: grid;
+  width: 100%;
+  max-width: 22rem;
+}
+
+@media (width <= 480px) {
+  .cards-slot + .cards-slot {
+    margin-left: -26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cards-slot,
+  .cards-card {
+    transition: none;
+  }
+
+  .cards-slot:hover:not(:disabled) .cards-back::after,
+  .cards-slot:focus-visible .cards-back::after {
+    animation: none;
+  }
+}
